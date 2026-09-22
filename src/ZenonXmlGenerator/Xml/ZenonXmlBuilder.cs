@@ -17,6 +17,7 @@ namespace ZenonXmlGenerator.Xml;
 ///   &lt;Apartment ShortName="zenOn(R) pictures list" Version="15000"&gt;
 ///     &lt;Picture ShortName="{screenName}"&gt;
 ///       &lt;Title&gt;{screenName}&lt;/Title&gt;
+///       &lt;Template&gt;{template}&lt;/Template&gt;
 ///       &lt;Type&gt;2&lt;/Type&gt;
 ///       &lt;Width&gt;…&lt;/Width&gt;
 ///       &lt;Height&gt;…&lt;/Height&gt;
@@ -116,6 +117,7 @@ public sealed class ZenonXmlBuilder
 
         // Picture 메타데이터
         w.WriteElementString("Title",           doc.ScreenName);
+        w.WriteElementString("Template",        string.IsNullOrWhiteSpace(doc.Template) ? XmlConstants.PictureDefaultTemplate : doc.Template);
         w.WriteElementString("Type",            XmlConstants.PictureType);
         w.WriteElementString("Width",           doc.Width.ToString());
         w.WriteElementString("Height",          doc.Height.ToString());

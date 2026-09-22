@@ -17,9 +17,17 @@ public sealed class LineElement : TopologyElement
     [JsonPropertyName("color")]
     public string Color { get; set; } = "#000000";
 
-    /// <summary>선 두께 (픽셀).</summary>
+    /// <summary>선 두께 (픽셀). 모선(Busbar)의 경우 기본 5.</summary>
     [JsonPropertyName("lineWidth")]
     public int LineWidth { get; set; } = 1;
+
+    /// <summary>기기 유형 (선택적: Busbar 등).</summary>
+    [JsonPropertyName("deviceType")]
+    public DeviceType? DeviceType { get; set; }
+
+    /// <summary>ALC 색상 적용 여부 (Busbar 등: TRUE / FALSE).</summary>
+    [JsonPropertyName("alcUseColor")]
+    public string? ALCUseColor { get; set; }
 
     // --- 파생 좌표 (Ground Truth 규칙) ---
     /// <summary>StartX = x1</summary>

@@ -24,6 +24,16 @@ public sealed class SymbolElement : TopologyElement
     [JsonPropertyName("variableName")]
     public string VariableName { get; set; } = string.Empty;
 
+    /// <summary>전력 기기 유형 (선택적: CircuitBreaker, Disconnector, Transformer 등).</summary>
+    [JsonPropertyName("deviceType")]
+    public DeviceType? DeviceType { get; set; }
+
+    /// <summary>
+    /// ALC 타입 (선택적: CircuitBreaker="2", Disconnector="7", Transformer="4" 등).
+    /// </summary>
+    [JsonPropertyName("alcType")]
+    public string? ALCType { get; set; }
+
     /// <summary>
     /// States 배열. null 또는 빈 배열이면 LibrarySymbolName 기반 기본 3-state 자동 생성:
     ///   States_0: Value=0, ValueMask=0            (wildcard/default)
@@ -38,6 +48,18 @@ public sealed class SymbolElement : TopologyElement
     [JsonIgnore]
     public IReadOnlyList<SymbolState> EffectiveStates =>
         (States is { Count: > 0 }) ? States : BuildDefaultStates();
+
+    /// <summary>
+    /// 유효 ALCType 값 (명시적 ALCType 우선, 없으면 DeviceType 기반 자동 도출).
+    /// </summary>
+    [JsonIgnore]
+    public string? EffectiveALCType => ALCType ?? DeviceType switch
+    {
+        Models.DeviceType.CircuitBreaker => Xml.XmlConstants.ALCTypeCircuitBreaker,
+        Models.DeviceType.Disconnector   => Xml.XmlConstants.ALCTypeDisconnector,
+        Models.DeviceType.Transformer    => Xml.XmlConstants.ALCTypeTransformer,
+        _ => null,
+    };
 
     private List<SymbolState> BuildDefaultStates() =>
     [

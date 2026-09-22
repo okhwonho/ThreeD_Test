@@ -103,7 +103,15 @@ public sealed class RootNodeTests
     }
 
     [Fact]
-    public void Picture_HasTypeMetadata()
+    public void Picture_HasTemplateMetadata()
+    {
+        var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
+        var template = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Template")!.InnerText;
+        Assert.Equal("Standard", template);
+    }
+
+    [Fact]
+    public void Picture_HasTypeMetadata_StandardScreen2()
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
         var type = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Type")!.InnerText;

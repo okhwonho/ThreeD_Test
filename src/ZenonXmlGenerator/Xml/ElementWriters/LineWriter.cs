@@ -27,6 +27,11 @@ public sealed class LineWriter : IElementWriter
         writer.WriteElementString("ForeColor", ColorConverter.ToColorRefString(line.Color));
         writer.WriteElementString("LineWidth", line.LineWidth.ToString());
 
-        writer.WriteEndElement(); // GrafEle_n
+        if (!string.IsNullOrWhiteSpace(line.ALCUseColor))
+        {
+            writer.WriteElementString("ALCUseColor", line.ALCUseColor);
+        }
+
+        writer.WriteEndElement(); // Elements_n
     }
 }

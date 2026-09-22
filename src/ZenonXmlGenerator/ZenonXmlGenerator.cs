@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using ZenonXmlGenerator.Models;
 using ZenonXmlGenerator.Xml;
 
@@ -21,6 +22,7 @@ public sealed class ZenonXmlGenerator
     private static readonly JsonSerializerOptions s_jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() },
     };
 
     private readonly ZenonXmlBuilder _builder;

@@ -21,11 +21,14 @@ public static class XmlConstants
     public const string ApartmentVersion = "15000";
 
     // ─── Picture 컨테이너 기본값 ─────────────────────────────────────────
-    /// <summary>Picture 기본 타입 값 (단선도 화면 = 2)</summary>
+    /// <summary>Picture 기본 타입 값 (Standard 화면 = 2)</summary>
     public const string PictureType = "2";
 
     /// <summary>Picture 기본 배경색 (zenon 시스템 색상 DWORD)</summary>
     public const string PictureBackgroundColor = "80000037";
+
+    /// <summary>Picture 기본 템플릿(프레임) 이름</summary>
+    public const string PictureDefaultTemplate = "Standard";
 
     // ─── NODE 속성 값 ────────────────────────────────────────────────────
     /// <summary>Elements_n/@NODE — 모든 화면 요소에 공통 적용</summary>
@@ -50,4 +53,14 @@ public static class XmlConstants
 
     /// <summary>exact-match 상태의 ValueMask = 0xFFFFFFFF</summary>
     public const long ValueMaskExact = 4294967295L;
+
+    // ─── ALC (Automatic Line Coloring) 상수 ──────────────────────────────
+    /// <summary>차단기 ALCType = 2</summary>
+    public const string ALCTypeCircuitBreaker = "2";
+
+    /// <summary>단로기 ALCType = 7</summary>
+    public const string ALCTypeDisconnector = "7";
+
+    /// <summary>변압기 ALCType = 4</summary>
+    public const string ALCTypeTransformer = "4";
 }

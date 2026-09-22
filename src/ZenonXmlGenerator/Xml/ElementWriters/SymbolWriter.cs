@@ -8,7 +8,7 @@ namespace ZenonXmlGenerator.Xml.ElementWriters;
 ///
 /// Ground Truth 구조:
 /// <code>
-/// &lt;GrafEle_n TYPE="16" NODE="zenOn(R) frame"&gt;
+/// &lt;Elements_n TYPE="16" NODE="zenOn(R) embedded object"&gt;
 ///   &lt;StartX&gt;…&lt;/StartX&gt;
 ///   &lt;DynEleVar_0&gt;
 ///     &lt;ProjectVar&gt;{VariableName}&lt;/ProjectVar&gt;
@@ -19,7 +19,7 @@ namespace ZenonXmlGenerator.Xml.ElementWriters;
 ///     &lt;SymbolName&gt;Symbol 6&lt;/SymbolName&gt;
 ///   &lt;/States_0&gt;
 ///   …
-/// &lt;/GrafEle_n&gt;
+/// &lt;/Elements_n&gt;
 /// </code>
 /// </summary>
 public sealed class SymbolWriter : IElementWriter
@@ -38,11 +38,20 @@ public sealed class SymbolWriter : IElementWriter
         writer.WriteElementString("Width",  sym.Width.ToString());
         writer.WriteElementString("Height", sym.Height.ToString());
 
+        // ALCType (선택적)
+        if (!string.IsNullOrWhiteSpace(sym.EffectiveALCType))
+        {
+            writer.WriteElementString("ALCType", sym.EffectiveALCType);
+        }
+
         // 변수 바인딩 (GUID 없음 — 문자열 명칭만)
-        writer.WriteStartElement("DynEleVar_0");
-        writer.WriteElementString("ProjectVar", sym.VariableName);
-        writer.WriteElementString("SymVarName", sym.VariableName);
-        writer.WriteEndElement(); // DynEleVar_0
+        if (!string.IsNullOrWhiteSpace(sym.VariableName))
+        {
+            writer.WriteStartElement("DynEleVar_0");
+            writer.WriteElementString("ProjectVar", sym.VariableName);
+            writer.WriteElementString("SymVarName", sym.VariableName);
+            writer.WriteEndElement(); // DynEleVar_0
+        }
 
         // States_n (자동 생성 또는 JSON 커스텀)
         var states = sym.EffectiveStates;
@@ -57,6 +66,6 @@ public sealed class SymbolWriter : IElementWriter
             writer.WriteEndElement(); // States_n
         }
 
-        writer.WriteEndElement(); // GrafEle_n
+        writer.WriteEndElement(); // Elements_n
     }
 }
