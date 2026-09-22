@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenonXmlGenerator", "src\Ze
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenonXmlGenerator.Tests", "tests\ZenonXmlGenerator.Tests\ZenonXmlGenerator.Tests.csproj", "{87FBA6FC-1793-4E3C-AE8E-EF7053F6EC70}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenonXmlGenerator.Cli", "src\ZenonXmlGenerator.Cli\ZenonXmlGenerator.Cli.csproj", "{3165B736-C825-4A14-A5C5-4688DDE004A5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,18 @@ Global
 		{87FBA6FC-1793-4E3C-AE8E-EF7053F6EC70}.Release|x64.Build.0 = Release|Any CPU
 		{87FBA6FC-1793-4E3C-AE8E-EF7053F6EC70}.Release|x86.ActiveCfg = Release|Any CPU
 		{87FBA6FC-1793-4E3C-AE8E-EF7053F6EC70}.Release|x86.Build.0 = Release|Any CPU
+		{3165B736-C825-4A14-A5C5-4688DDE004A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3165B736-C825-4A14-A5C5-4688DDE004A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3165B736-C825-4A14-A5C5-4688DDE004A5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3165B736-C825-4A14-A5C5-4688DDE004A5}.Debug|x64.Build.0 = Debug|Any CPU
+		{3165B736-C825-4A14-A5C5-4688DDE004A5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3165B736-C825-4A14-A5C5-4688DDE004A5}.Debug|x86.Build.0 = Debug|Any CPU
+		{3165B736-C825-4A14-A5C5-4688DDE004A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3165B736-C825-4A14-A5C5-4688DDE004A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3165B736-C825-4A14-A5C5-4688DDE004A5}.Release|x64.ActiveCfg = Release|Any CPU
+		{3165B736-C825-4A14-A5C5-4688DDE004A5}.Release|x64.Build.0 = Release|Any CPU
+		{3165B736-C825-4A14-A5C5-4688DDE004A5}.Release|x86.ActiveCfg = Release|Any CPU
+		{3165B736-C825-4A14-A5C5-4688DDE004A5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -50,5 +64,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{CC410EF7-946F-41FE-AB95-FB805B5F6961} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{87FBA6FC-1793-4E3C-AE8E-EF7053F6EC70} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{3165B736-C825-4A14-A5C5-4688DDE004A5} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

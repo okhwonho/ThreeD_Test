@@ -11,10 +11,20 @@ namespace ZenonXmlGenerator.Models;
 /// </summary>
 public sealed class SymbolElement : TopologyElement
 {
+    /// <summary>기기 심볼 좌상단 X 좌표. (CenterX가 지정되고 X가 0이면 자동 계산 가능)</summary>
     [JsonPropertyName("x")]      public int X      { get; set; }
+
+    /// <summary>기기 심볼 좌상단 Y 좌표. (CenterY가 지정되고 Y가 0이면 자동 계산 가능)</summary>
     [JsonPropertyName("y")]      public int Y      { get; set; }
+
     [JsonPropertyName("width")]  public int Width  { get; set; }
     [JsonPropertyName("height")] public int Height { get; set; }
+
+    /// <summary>도면/비전 인식 중심점 X 좌표 (선택적).</summary>
+    [JsonPropertyName("centerX")] public int? CenterX { get; set; }
+
+    /// <summary>도면/비전 인식 중심점 Y 좌표 (선택적).</summary>
+    [JsonPropertyName("centerY")] public int? CenterY { get; set; }
 
     /// <summary>zenon Symbol Library 기본 심볼 이름.</summary>
     [JsonPropertyName("librarySymbolName")]
@@ -48,6 +58,14 @@ public sealed class SymbolElement : TopologyElement
     [JsonIgnore]
     public IReadOnlyList<SymbolState> EffectiveStates =>
         (States is { Count: > 0 }) ? States : BuildDefaultStates();
+
+    /// <summary>실제 좌상단 X 좌표 (CenterX 기반 계산 fallback 지원).</summary>
+    [JsonIgnore]
+    public int EffectiveX => (X == 0 && CenterX.HasValue && Width > 0) ? CenterX.Value - (Width / 2) : X;
+
+    /// <summary>실제 좌상단 Y 좌표 (CenterY 기반 계산 fallback 지원).</summary>
+    [JsonIgnore]
+    public int EffectiveY => (Y == 0 && CenterY.HasValue && Height > 0) ? CenterY.Value - (Height / 2) : Y;
 
     /// <summary>
     /// 유효 ALCType 값 (명시적 ALCType 우선, 없으면 DeviceType 기반 자동 도출).

@@ -32,9 +32,9 @@ public sealed class SymbolWriter : IElementWriter
         writer.WriteAttributeString("NODE", XmlConstants.NodeEmbeddedObject);
         writer.WriteAttributeString("TYPE", XmlConstants.TypeSymbol);
 
-        // 위치·크기
-        writer.WriteElementString("StartX", sym.X.ToString());
-        writer.WriteElementString("StartY", sym.Y.ToString());
+        // 위치·크기 (EffectiveX/EffectiveY)
+        writer.WriteElementString("StartX", sym.EffectiveX.ToString());
+        writer.WriteElementString("StartY", sym.EffectiveY.ToString());
         writer.WriteElementString("Width",  sym.Width.ToString());
         writer.WriteElementString("Height", sym.Height.ToString());
 

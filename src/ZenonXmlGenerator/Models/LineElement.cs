@@ -29,6 +29,10 @@ public sealed class LineElement : TopologyElement
     [JsonPropertyName("alcUseColor")]
     public string? ALCUseColor { get; set; }
 
+    /// <summary>연결된 모선 식별자 또는 연결 정보 (비전/CAD 연계용).</summary>
+    [JsonPropertyName("connectedBus")]
+    public string? ConnectedBus { get; set; }
+
     // --- 파생 좌표 (Ground Truth 규칙) ---
     /// <summary>StartX = x1</summary>
     [JsonIgnore] public int StartX => X1;

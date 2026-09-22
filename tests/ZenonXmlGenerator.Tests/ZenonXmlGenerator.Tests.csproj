@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ZenonXmlGenerator\ZenonXmlGenerator.csproj" />
+    <ProjectReference Include="..\..\src\ZenonXmlGenerator.Cli\ZenonXmlGenerator.Cli.csproj" />
   </ItemGroup>
 
   <ItemGroup>
