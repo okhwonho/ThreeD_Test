@@ -1,0 +1,11 @@
+C:\Users\USER\Desktop\Coding\AntiGravity_Work\ThreeD_Test\src\ZenonXmlGenerator\bin\Debug\net9.0\ZenonXmlGenerator.deps.json
+C:\Users\USER\Desktop\Coding\AntiGravity_Work\ThreeD_Test\src\ZenonXmlGenerator\bin\Debug\net9.0\ZenonXmlGenerator.dll
+C:\Users\USER\Desktop\Coding\AntiGravity_Work\ThreeD_Test\src\ZenonXmlGenerator\bin\Debug\net9.0\ZenonXmlGenerator.pdb
+C:\Users\USER\Desktop\Coding\AntiGravity_Work\ThreeD_Test\src\ZenonXmlGenerator\obj\Debug\net9.0\ZenonXmlGenerator.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\USER\Desktop\Coding\AntiGravity_Work\ThreeD_Test\src\ZenonXmlGenerator\obj\Debug\net9.0\ZenonXmlGenerator.AssemblyInfoInputs.cache
+C:\Users\USER\Desktop\Coding\AntiGravity_Work\ThreeD_Test\src\ZenonXmlGenerator\obj\Debug\net9.0\ZenonXmlGenerator.AssemblyInfo.cs
+C:\Users\USER\Desktop\Coding\AntiGravity_Work\ThreeD_Test\src\ZenonXmlGenerator\obj\Debug\net9.0\ZenonXmlGenerator.csproj.CoreCompileInputs.cache
+C:\Users\USER\Desktop\Coding\AntiGravity_Work\ThreeD_Test\src\ZenonXmlGenerator\obj\Debug\net9.0\ZenonXmlGenerator.dll
+C:\Users\USER\Desktop\Coding\AntiGravity_Work\ThreeD_Test\src\ZenonXmlGenerator\obj\Debug\net9.0\refint\ZenonXmlGenerator.dll
+C:\Users\USER\Desktop\Coding\AntiGravity_Work\ThreeD_Test\src\ZenonXmlGenerator\obj\Debug\net9.0\ZenonXmlGenerator.pdb
+C:\Users\USER\Desktop\Coding\AntiGravity_Work\ThreeD_Test\src\ZenonXmlGenerator\obj\Debug\net9.0\ref\ZenonXmlGenerator.dll

@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "ZenonXmlGenerator/1.0.0": {
+        "runtime": {
+          "ZenonXmlGenerator.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "ZenonXmlGenerator/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
