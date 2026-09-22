@@ -135,11 +135,16 @@ Use tools because they solve a real workflow need, not because they exist. Prefe
 
 When a workflow becomes stable and repetitive, move it into a focused Skill rather than growing `AGENTS.md` or repeating long prompts. Keep Skill triggers narrow and use progressive disclosure to deeper references/scripts only when needed.
 
-## 13. Completion
+## 13. Completion & Reporting Protocol
 
-Do not stop at the first implementation when safe local verification can complete the task. Before declaring non-trivial work complete, confirm: requested behavior, acceptance criteria, relevant validation, scope-clean diff, and material compatibility/data risks. Update project status/design documentation only when durable project state actually changed.
+Do not stop at the first implementation when safe local verification can complete the task. Before declaring non-trivial work complete, confirm: requested behavior, acceptance criteria, relevant validation, scope-clean diff, and material compatibility/data risks.
 
-Final report should state: what changed; what was validated and the result; what remains unvalidated/uncertain; important residual risk or follow-up.
+### Standard Reporting Protocol (Output & Persistence)
+1. **상세 보고서 자동 저장:** 모든 상세 작업 내역과 테스트 결과는 프로젝트 루트의 `docs/LATEST_REPORT.md` 파일에 기록하고 함께 git commit & push 한다.
+2. **사용자 터미널 최종 메시지 (3줄 고정):**
+   - `[작업명]: {마일스톤/작업 이름}`
+   - `[결과]: 단위 테스트 {N}개 전체 통과`
+   - `[GitHub 확인 링크]: https://github.com/okhwonho/ThreeD_Test/blob/main/docs/LATEST_REPORT.md`
 
 ## 14. Continuous Improvement
 
