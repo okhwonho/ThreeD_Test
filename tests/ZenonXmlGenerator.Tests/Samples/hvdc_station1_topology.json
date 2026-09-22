@@ -1,0 +1,613 @@
+{
+  "screenName": "HVDC_STATION1_SLD",
+  "template": "Standard",
+  "width": 1920,
+  "height": 1080,
+  "elements": [
+    {
+      "type": "text",
+      "id": "TXT_TITLE",
+      "x": 60,
+      "y": 40,
+      "text": "HVDC Converter Station #1 - Single Line Diagram (SLD)",
+      "fontSize": 20,
+      "color": "#002060"
+    },
+    {
+      "type": "text",
+      "id": "TXT_AC_BUS_A",
+      "x": 60,
+      "y": 120,
+      "text": "AC 400kV BUS-A",
+      "fontSize": 14,
+      "color": "#000000"
+    },
+    {
+      "type": "line",
+      "id": "AC_BUS_A",
+      "deviceType": "Busbar",
+      "alcUseColor": "TRUE",
+      "x1": 60,
+      "y1": 150,
+      "x2": 1860,
+      "y2": 150,
+      "color": "#C00000",
+      "lineWidth": 5
+    },
+    {
+      "type": "text",
+      "id": "TXT_AC_BUS_B",
+      "x": 60,
+      "y": 240,
+      "text": "AC 400kV BUS-B",
+      "fontSize": 14,
+      "color": "#000000"
+    },
+    {
+      "type": "line",
+      "id": "AC_BUS_B",
+      "deviceType": "Busbar",
+      "alcUseColor": "TRUE",
+      "x1": 60,
+      "y1": 270,
+      "x2": 1860,
+      "y2": 270,
+      "color": "#7030A0",
+      "lineWidth": 5
+    },
+    {
+      "type": "rectangle",
+      "id": "BAY_AC_YARD",
+      "x": 100,
+      "y": 90,
+      "width": 420,
+      "height": 900,
+      "fillColor": "#F2F4F7",
+      "borderColor": "#B0C4DE"
+    },
+    {
+      "type": "text",
+      "id": "BAY_AC_TITLE",
+      "x": 120,
+      "y": 100,
+      "text": "[ AC Switchyard & Filter Bay ]",
+      "fontSize": 13,
+      "color": "#1F497D"
+    },
+    {
+      "type": "line",
+      "id": "L_AC_DS1",
+      "x1": 220,
+      "y1": 150,
+      "x2": 220,
+      "y2": 190,
+      "color": "#000000",
+      "lineWidth": 2
+    },
+    {
+      "type": "symbol",
+      "id": "AC_DS1",
+      "deviceType": "Disconnector",
+      "alcType": "7",
+      "centerX": 220,
+      "centerY": 210,
+      "width": 40,
+      "height": 40,
+      "tagLabel": "89-1A",
+      "librarySymbolName": "DS_Open",
+      "variableName": "HVDC1.AC_YARD.DS1.Status",
+      "states": [
+        { "value": 0, "valueMask": 0, "symbolName": "DS_Open" },
+        { "value": 0, "valueMask": 4294967295, "symbolName": "DS_Open" },
+        { "value": 1, "valueMask": 4294967295, "symbolName": "DS_Closed" }
+      ]
+    },
+    {
+      "type": "line",
+      "id": "L_AC_DS2",
+      "x1": 340,
+      "y1": 270,
+      "x2": 340,
+      "y2": 310,
+      "color": "#000000",
+      "lineWidth": 2
+    },
+    {
+      "type": "symbol",
+      "id": "AC_DS2",
+      "deviceType": "Disconnector",
+      "alcType": "7",
+      "centerX": 340,
+      "centerY": 330,
+      "width": 40,
+      "height": 40,
+      "tagLabel": "89-1B",
+      "librarySymbolName": "DS_Open",
+      "variableName": "HVDC1.AC_YARD.DS2.Status",
+      "states": [
+        { "value": 0, "valueMask": 0, "symbolName": "DS_Open" },
+        { "value": 0, "valueMask": 4294967295, "symbolName": "DS_Open" },
+        { "value": 1, "valueMask": 4294967295, "symbolName": "DS_Closed" }
+      ]
+    },
+    {
+      "type": "line",
+      "id": "L_AC_TIE1",
+      "x1": 220,
+      "y1": 230,
+      "x2": 220,
+      "y2": 380,
+      "color": "#000000",
+      "lineWidth": 2
+    },
+    {
+      "type": "line",
+      "id": "L_AC_TIE2",
+      "x1": 340,
+      "y1": 350,
+      "x2": 340,
+      "y2": 380,
+      "color": "#000000",
+      "lineWidth": 2
+    },
+    {
+      "type": "line",
+      "id": "L_AC_TIE_BUS",
+      "x1": 220,
+      "y1": 380,
+      "x2": 340,
+      "y2": 380,
+      "color": "#000000",
+      "lineWidth": 2
+    },
+    {
+      "type": "line",
+      "id": "L_AC_CB_IN",
+      "x1": 280,
+      "y1": 380,
+      "x2": 280,
+      "y2": 420,
+      "color": "#000000",
+      "lineWidth": 2
+    },
+    {
+      "type": "symbol",
+      "id": "AC_CB1",
+      "deviceType": "CircuitBreaker",
+      "alcType": "2",
+      "centerX": 280,
+      "centerY": 440,
+      "width": 40,
+      "height": 40,
+      "tagLabel": "52-1",
+      "librarySymbolName": "CB_Open",
+      "variableName": "HVDC1.AC_YARD.CB1.Status",
+      "states": [
+        { "value": 0, "valueMask": 0, "symbolName": "CB_Open" },
+        { "value": 0, "valueMask": 4294967295, "symbolName": "CB_Open" },
+        { "value": 1, "valueMask": 4294967295, "symbolName": "CB_Closed" }
+      ]
+    },
+    {
+      "type": "line",
+      "id": "L_AC_CT",
+      "x1": 280,
+      "y1": 460,
+      "x2": 280,
+      "y2": 500,
+      "color": "#000000",
+      "lineWidth": 2
+    },
+    {
+      "type": "symbol",
+      "id": "AC_CT1",
+      "deviceType": "CurrentTransformer",
+      "centerX": 280,
+      "centerY": 520,
+      "width": 40,
+      "height": 40,
+      "tagLabel": "CT-1",
+      "librarySymbolName": "CT_Symbol",
+      "variableName": "HVDC1.AC_YARD.CT1.CurrentVal"
+    },
+    {
+      "type": "line",
+      "id": "L_AC_PT",
+      "x1": 280,
+      "y1": 540,
+      "x2": 360,
+      "y2": 540,
+      "color": "#000000",
+      "lineWidth": 2
+    },
+    {
+      "type": "symbol",
+      "id": "AC_PT1",
+      "deviceType": "PotentialTransformer",
+      "centerX": 380,
+      "centerY": 540,
+      "width": 40,
+      "height": 40,
+      "tagLabel": "PT-1",
+      "librarySymbolName": "PT_Symbol",
+      "variableName": "HVDC1.AC_YARD.PT1.VoltageVal"
+    },
+    {
+      "type": "line",
+      "id": "L_AC_FILTER_IN",
+      "x1": 280,
+      "y1": 540,
+      "x2": 280,
+      "y2": 600,
+      "color": "#000000",
+      "lineWidth": 2
+    },
+    {
+      "type": "symbol",
+      "id": "AC_ES1",
+      "deviceType": "EarthSwitch",
+      "centerX": 360,
+      "centerY": 600,
+      "width": 40,
+      "height": 40,
+      "tagLabel": "89-ES1",
+      "librarySymbolName": "ES_Open",
+      "variableName": "HVDC1.AC_YARD.ES1.Status"
+    },
+    {
+      "type": "line",
+      "id": "L_AC_ES_TIE",
+      "x1": 280,
+      "y1": 600,
+      "x2": 340,
+      "y2": 600,
+      "color": "#000000",
+      "lineWidth": 2
+    },
+    {
+      "type": "rectangle",
+      "id": "BAY_CONVERTER_TR",
+      "x": 580,
+      "y": 90,
+      "width": 420,
+      "height": 900,
+      "fillColor": "#F2F4F7",
+      "borderColor": "#B0C4DE"
+    },
+    {
+      "type": "text",
+      "id": "BAY_TR_TITLE",
+      "x": 600,
+      "y": 100,
+      "text": "[ Converter Transformer TR-1 ]",
+      "fontSize": 13,
+      "color": "#1F497D"
+    },
+    {
+      "type": "line",
+      "id": "L_TR_FEED",
+      "x1": 280,
+      "y1": 600,
+      "x2": 280,
+      "y2": 700,
+      "color": "#000000",
+      "lineWidth": 2
+    },
+    {
+      "type": "line",
+      "id": "L_TR_BRIDGE",
+      "x1": 280,
+      "y1": 700,
+      "x2": 790,
+      "y2": 700,
+      "color": "#000000",
+      "lineWidth": 2
+    },
+    {
+      "type": "line",
+      "id": "L_TR_IN",
+      "x1": 790,
+      "y1": 700,
+      "x2": 790,
+      "y2": 730,
+      "color": "#000000",
+      "lineWidth": 2
+    },
+    {
+      "type": "symbol",
+      "id": "CONV_TR1",
+      "deviceType": "Transformer",
+      "alcType": "4",
+      "centerX": 790,
+      "centerY": 760,
+      "width": 60,
+      "height": 60,
+      "tagLabel": "TR-1 (400kV/165kV)",
+      "librarySymbolName": "TR_2W",
+      "variableName": "HVDC1.TR_BAY.TR1.Status"
+    },
+    {
+      "type": "line",
+      "id": "L_TR_OUT",
+      "x1": 790,
+      "y1": 790,
+      "x2": 790,
+      "y2": 840,
+      "color": "#000000",
+      "lineWidth": 2
+    },
+    {
+      "type": "rectangle",
+      "id": "BAY_VALVE_HALL",
+      "x": 1060,
+      "y": 90,
+      "width": 420,
+      "height": 900,
+      "fillColor": "#FFF2CC",
+      "borderColor": "#D6B656"
+    },
+    {
+      "type": "text",
+      "id": "BAY_VALVE_TITLE",
+      "x": 1080,
+      "y": 100,
+      "text": "[ MMC Valve Hall (AC/DC Converter) ]",
+      "fontSize": 13,
+      "color": "#B45F06"
+    },
+    {
+      "type": "line",
+      "id": "L_VALVE_BRIDGE",
+      "x1": 790,
+      "y1": 840,
+      "x2": 1270,
+      "y2": 840,
+      "color": "#000000",
+      "lineWidth": 2
+    },
+    {
+      "type": "line",
+      "id": "L_VALVE_IN",
+      "x1": 1270,
+      "y1": 840,
+      "x2": 1270,
+      "y2": 720,
+      "color": "#000000",
+      "lineWidth": 2
+    },
+    {
+      "type": "symbol",
+      "id": "MMC_VALVE_1",
+      "deviceType": "CircuitBreaker",
+      "alcType": "2",
+      "centerX": 1270,
+      "centerY": 680,
+      "width": 80,
+      "height": 80,
+      "tagLabel": "MMC-CONV-1",
+      "librarySymbolName": "CB_Closed",
+      "variableName": "HVDC1.VALVE_HALL.CONV1.Status",
+      "states": [
+        { "value": 0, "valueMask": 0, "symbolName": "CB_Open" },
+        { "value": 0, "valueMask": 4294967295, "symbolName": "CB_Open" },
+        { "value": 1, "valueMask": 4294967295, "symbolName": "CB_Closed" }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "TXT_MMC_STATUS",
+      "x": 1220,
+      "y": 600,
+      "text": "MMC ±500kV 1500MW",
+      "fontSize": 12,
+      "color": "#B45F06"
+    },
+    {
+      "type": "rectangle",
+      "id": "BAY_DC_YARD",
+      "x": 1540,
+      "y": 90,
+      "width": 340,
+      "height": 900,
+      "fillColor": "#FCE5CD",
+      "borderColor": "#E69138"
+    },
+    {
+      "type": "text",
+      "id": "BAY_DC_TITLE",
+      "x": 1560,
+      "y": 100,
+      "text": "[ DC Switchyard & Pole ]",
+      "fontSize": 13,
+      "color": "#783F04"
+    },
+    {
+      "type": "line",
+      "id": "L_DC_POS_OUT",
+      "x1": 1270,
+      "y1": 640,
+      "x2": 1270,
+      "y2": 450,
+      "color": "#CC0000",
+      "lineWidth": 3
+    },
+    {
+      "type": "line",
+      "id": "L_DC_POS_CROSS",
+      "x1": 1270,
+      "y1": 450,
+      "x2": 1710,
+      "y2": 450,
+      "color": "#CC0000",
+      "lineWidth": 3
+    },
+    {
+      "type": "text",
+      "id": "TXT_DC_POLE_P",
+      "x": 1560,
+      "y": 420,
+      "text": "DC Pole 1 (+500kV)",
+      "fontSize": 13,
+      "color": "#CC0000"
+    },
+    {
+      "type": "symbol",
+      "id": "DC_CB_P1",
+      "deviceType": "CircuitBreaker",
+      "alcType": "2",
+      "centerX": 1710,
+      "centerY": 480,
+      "width": 40,
+      "height": 40,
+      "tagLabel": "DC-CB-P1",
+      "librarySymbolName": "CB_Open",
+      "variableName": "HVDC1.DC_YARD.DCCB_P1.Status",
+      "states": [
+        { "value": 0, "valueMask": 0, "symbolName": "CB_Open" },
+        { "value": 0, "valueMask": 4294967295, "symbolName": "CB_Open" },
+        { "value": 1, "valueMask": 4294967295, "symbolName": "CB_Closed" }
+      ]
+    },
+    {
+      "type": "line",
+      "id": "L_DC_P_DS_FEED",
+      "x1": 1710,
+      "y1": 500,
+      "x2": 1710,
+      "y2": 540,
+      "color": "#CC0000",
+      "lineWidth": 3
+    },
+    {
+      "type": "symbol",
+      "id": "DC_DS_P1",
+      "deviceType": "Disconnector",
+      "alcType": "7",
+      "centerX": 1710,
+      "centerY": 560,
+      "width": 40,
+      "height": 40,
+      "tagLabel": "DC-DS-P1",
+      "librarySymbolName": "DS_Open",
+      "variableName": "HVDC1.DC_YARD.DCDS_P1.Status",
+      "states": [
+        { "value": 0, "valueMask": 0, "symbolName": "DS_Open" },
+        { "value": 0, "valueMask": 4294967295, "symbolName": "DS_Open" },
+        { "value": 1, "valueMask": 4294967295, "symbolName": "DS_Closed" }
+      ]
+    },
+    {
+      "type": "line",
+      "id": "L_DC_P_OUT",
+      "x1": 1710,
+      "y1": 580,
+      "x2": 1710,
+      "y2": 660,
+      "color": "#CC0000",
+      "lineWidth": 4
+    },
+    {
+      "type": "text",
+      "id": "TXT_OUT_LINE_P",
+      "x": 1630,
+      "y": 670,
+      "text": "==> Subsea Cable Pole 1 (+500kV)",
+      "fontSize": 11,
+      "color": "#CC0000"
+    },
+    {
+      "type": "line",
+      "id": "L_DC_NEG_OUT",
+      "x1": 1310,
+      "y1": 680,
+      "x2": 1310,
+      "y2": 780,
+      "color": "#0000CC",
+      "lineWidth": 3
+    },
+    {
+      "type": "line",
+      "id": "L_DC_NEG_CROSS",
+      "x1": 1310,
+      "y1": 780,
+      "x2": 1710,
+      "y2": 780,
+      "color": "#0000CC",
+      "lineWidth": 3
+    },
+    {
+      "type": "text",
+      "id": "TXT_DC_POLE_N",
+      "x": 1560,
+      "y": 750,
+      "text": "DC Pole 2 (-500kV)",
+      "fontSize": 13,
+      "color": "#0000CC"
+    },
+    {
+      "type": "symbol",
+      "id": "DC_CB_N1",
+      "deviceType": "CircuitBreaker",
+      "alcType": "2",
+      "centerX": 1710,
+      "centerY": 810,
+      "width": 40,
+      "height": 40,
+      "tagLabel": "DC-CB-N1",
+      "librarySymbolName": "CB_Open",
+      "variableName": "HVDC1.DC_YARD.DCCB_N1.Status",
+      "states": [
+        { "value": 0, "valueMask": 0, "symbolName": "CB_Open" },
+        { "value": 0, "valueMask": 4294967295, "symbolName": "CB_Open" },
+        { "value": 1, "valueMask": 4294967295, "symbolName": "CB_Closed" }
+      ]
+    },
+    {
+      "type": "line",
+      "id": "L_DC_N_DS_FEED",
+      "x1": 1710,
+      "y1": 830,
+      "x2": 1710,
+      "y2": 870,
+      "color": "#0000CC",
+      "lineWidth": 3
+    },
+    {
+      "type": "symbol",
+      "id": "DC_DS_N1",
+      "deviceType": "Disconnector",
+      "alcType": "7",
+      "centerX": 1710,
+      "centerY": 890,
+      "width": 40,
+      "height": 40,
+      "tagLabel": "DC-DS-N1",
+      "librarySymbolName": "DS_Open",
+      "variableName": "HVDC1.DC_YARD.DCDS_N1.Status",
+      "states": [
+        { "value": 0, "valueMask": 0, "symbolName": "DS_Open" },
+        { "value": 0, "valueMask": 4294967295, "symbolName": "DS_Open" },
+        { "value": 1, "valueMask": 4294967295, "symbolName": "DS_Closed" }
+      ]
+    },
+    {
+      "type": "line",
+      "id": "L_DC_N_OUT",
+      "x1": 1710,
+      "y1": 910,
+      "x2": 1710,
+      "y2": 960,
+      "color": "#0000CC",
+      "lineWidth": 4
+    },
+    {
+      "type": "text",
+      "id": "TXT_OUT_LINE_N",
+      "x": 1630,
+      "y": 970,
+      "text": "==> Subsea Cable Pole 2 (-500kV)",
+      "fontSize": 11,
+      "color": "#0000CC"
+    }
+  ]
+}

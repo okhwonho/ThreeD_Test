@@ -13,6 +13,9 @@ public sealed class CliE2ETests
     private static readonly string SampleSldJsonPath = Path.Combine(
         AppContext.BaseDirectory, "Samples", "sample_sld_topology.json");
 
+    private static readonly string SampleHvdcJsonPath = Path.Combine(
+        AppContext.BaseDirectory, "Samples", "hvdc_station1_topology.json");
+
     private static readonly string SampleJsonPath = Path.Combine(
         AppContext.BaseDirectory, "Samples", "sample_topology.json");
 
@@ -105,6 +108,47 @@ public sealed class CliE2ETests
             var picture = doc.DocumentElement!.SelectSingleNode("Apartment/Picture");
             Assert.NotNull(picture);
             Assert.Equal("Substation_154kV_SLD", picture.Attributes!["ShortName"]!.Value);
+            Assert.Equal("2", picture.SelectSingleNode("Type")!.InnerText);
+        }
+        finally
+        {
+            if (File.Exists(tempXml)) File.Delete(tempXml);
+        }
+    }
+
+    [Fact]
+    public void Cli_GenerateHvdcStationXml_SucceedsAndProducesValidXml()
+    {
+        var tempXml = Path.Combine(Path.GetTempPath(), $"cli_test_hvdc_{Guid.NewGuid():N}.xml");
+        try
+        {
+            var exitCode = Program.Main([
+                "--input", SampleHvdcJsonPath,
+                "--output", tempXml,
+                "--screen-name", "HVDC_STATION1_SLD"
+            ]);
+
+            Assert.Equal(Program.ExitSuccess, exitCode);
+            Assert.True(File.Exists(tempXml));
+
+            // Validate UTF-16 LE BOM
+            var bytes = File.ReadAllBytes(tempXml);
+            Assert.True(bytes.Length >= 4);
+            Assert.Equal(0xFF, bytes[0]);
+            Assert.Equal(0xFE, bytes[1]);
+
+            // Validate XML structure
+            var doc = new XmlDocument();
+            using (var ms = new MemoryStream(bytes))
+            {
+                doc.Load(ms);
+            }
+
+            var picture = doc.DocumentElement!.SelectSingleNode("Apartment/Picture");
+            Assert.NotNull(picture);
+            Assert.Equal("HVDC_STATION1_SLD", picture.Attributes!["ShortName"]!.Value);
+            Assert.Equal("HVDC_STATION1_SLD", picture.SelectSingleNode("Title")!.InnerText);
+            Assert.Equal("Standard", picture.SelectSingleNode("Template")!.InnerText);
             Assert.Equal("2", picture.SelectSingleNode("Type")!.InnerText);
         }
         finally
