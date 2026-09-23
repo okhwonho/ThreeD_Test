@@ -1,49 +1,48 @@
 # Latest Execution Report
 
-> **작업 일시:** 2026-09-23 10:40 KST  
-> **마일스톤:** zenon 15 Standard Screen XML 규격 수정 (Type 0, Template MAIN, 구역 사각형 투명화)
+> **작업 일시:** 2026-09-23 11:10 KST  
+> **마일스톤:** HVDC Bipole Full System SLD 토폴로지 구축 및 E2E 변환 검증
 
 ---
 
 ## 1. 개요 (Summary)
-- **Standard Screen XML 규격 Ground Truth 일치화:**
-  - Standard Screen Type 코드를 정품 zenon 15 규격에 맞춰 **`<Type>0</Type>`**으로 전면 수정 (`2`는 Alarm List 코드였음).
-  - 화면 프레임 템플릿 기본값을 **`<Template>MAIN</Template>`**으로 설정.
-  - **`<SizeFromTemplate>TRUE</SizeFromTemplate>`** 메타데이터 태그 추가 반영.
-- **Bay 영역 사각형(Container Box) 투명화 및 테두리 전용 렌더링:**
-  - `<FillPattern>0</FillPattern>` (채우기 없음/투명) 및 `<AlphaBackColor>0</AlphaBackColor>` 적용.
-  - `<LineWidth>1</LineWidth>`, 테두리 색상 기본값 `<LineColorEx>5C6C75</LineColorEx>` (`<ForeColor>00756C5C</ForeColor>`) 적용.
-  - `FillColor`는 명시적으로 지정되지 않은 경우 `<FillColor>` 태그를 생략하여 배경이 기기와 선을 덮지 않도록 수정.
-  - Z-Order 정렬: 구역 사각형을 토폴로지 JSON 최상단(`elements` 배열 앞단)에 배치하여 기기 및 선로 심볼이 전면에 위치하도록 보장.
-- **산출물 XML 전면 재생성:**
-  - `output_hvdc_station1.xml` (49,352 bytes), `output_sld_full_test.xml` (47,224 bytes), `output_test_screen.xml` (7,700 bytes) 재생성 완료 (UTF-16 LE BOM 유지).
+- **HVDC 전체 바이폴 단선도(3840×1080) 토폴로지 데이터 구축:**
+  - `tests/ZenonXmlGenerator.Tests/Samples/hvdc_full_system_topology.json` 신규 작성.
+  - **캔버스:** 3840×1080 (와이드 4K 듀얼 역방향 스크린 사이즈)
+  - **구성 구역 (9개 프레임 박스, 투명 외곽선 전용):**
+    - ST1 AC 스위치야드 (x=30~630), ST1 변환 TR 베이 (x=640~1020), ST1 MMC 밸브홀 +Pole (x=1030~1470), ST1 MMC 밸브홀 -Pole (x=1030~1470)
+    - DC 바이폴 중앙 연계 구역 (x=1480~2360): +525kV/−525kV 극성별 DC 모선, DMR 귀선, 접지 스위치
+    - ST2 MMC 밸브홀 +Pole/−Pole (x=2370~2810), ST2 변환 TR 베이 (x=2820~3200), ST2 AC 스위치야드 (x=3210~3810)
+  - **기기 총괄:** Busbar 6개, CB 14개, DS 16개, TR 4개(Y-Y-Δ 3권선), MMC Converter 4개(Pos/Neg Pole × ST1/ST2), CT 2개, ES 10개, DMR 귀선 스위치 3개, 모니터링 테이블 박스 6개
+  - **태그 포인트:** `00CB`, `71CB`, `72CB`, `DS1~DS3`, `P1 ES`, `P2 ES`, `N1 ES`, `N2 ES`, `PLD DS`, `DMR-SW1`, `DMR-SW2`, `GND SW`, TR-1/TR-2(Y-Y-Δ), MMC Valve Hall (±Pole) × ST1/ST2
+  - **중앙 스펙 블록:** `DIRECTION: ST1→ST2`, `P: 2000.0 MW`, `Vdc: ±525.0 kV`
+
+- **zenon-gen CLI 배치 실행 결과:**
+  - `output_hvdc_full_system.xml` — **156,298 bytes, UTF-16 LE BOM** (`FF FE 3C 00`) 정상.
+
+- **E2E 테스트 케이스 추가:**
+  - `CliE2ETests.Cli_GenerateHvdcFullBipoleXml_SucceedsAndProducesValidXml` 신규 추가.
+  - 검증 항목: BOM, Screen Type `0`, Template `MAIN`, `SizeFromTemplate TRUE`, 투명 베이 프레임(Type 102, FillPattern 0, AlphaBackColor 0), ST1/ST2 MMC 변수 바인딩(DynEleVar_0 ProjectVar).
 
 ---
 
 ## 2. 세부 변경 내역 (Detailed Changes)
-1. **`src/ZenonXmlGenerator/Xml/XmlConstants.cs` & `ZenonXmlBuilder.cs`:**
-   - `PictureType = "0"`, `PictureDefaultTemplate = "MAIN"`, `PictureSizeFromTemplate = "TRUE"` 상수 및 빌더 로직 갱신.
-2. **`src/ZenonXmlGenerator/Models/RectangleElement.cs` & `RectangleWriter.cs`:**
-   - `FillPattern` (기본값 0), `AlphaBackColor` (기본값 0), `LineWidth` (기본값 1), `BorderColor` (기본값 `#5C6C75`), Nullable `FillColor` 속성 추가 및 XML 직렬화 로직 구현.
-3. **토폴로지 샘플 JSON 파일 갱신:**
-   - `tests/ZenonXmlGenerator.Tests/Samples/hvdc_station1_topology.json`
-   - `tests/ZenonXmlGenerator.Tests/Samples/sample_sld_topology.json`
-   - `tests/ZenonXmlGenerator.Tests/Samples/sample_topology.json`
-   - `template: "MAIN"`, `sizeFromTemplate: "TRUE"`, 사각형 `fillPattern: 0`, `alphaBackColor: 0`, Z-order 재배치.
-4. **테스트 코드 갱신:**
-   - `tests/ZenonXmlGenerator.Tests/RootNodeTests.cs`
-   - `tests/ZenonXmlGenerator.Tests/CliE2ETests.cs`
-   - `tests/ZenonXmlGenerator.Tests/SldTopologyTests.cs`
+1. **`tests/.../Samples/hvdc_full_system_topology.json` [신규]:**
+   - 3840×1080 캔버스, 9개 투명 구역 프레임, ST1/ST2 대칭 AC야드+TR+MMC, DC 바이폴 +/-Pole 모선, DMR 귀선, 방향 지시 화살표, 모니터링 블록 텍스트.
+2. **`tests/.../CliE2ETests.cs` [수정]:**
+   - `SampleHvdcFullJsonPath` 경로 상수 및 `Cli_GenerateHvdcFullBipoleXml_SucceedsAndProducesValidXml` E2E 테스트 추가.
+3. **`output_hvdc_full_system.xml` [신규]:**
+   - CLI 실행 생성 산출물 (156,298 bytes, UTF-16 LE BOM).
 
 ---
 
 ## 3. 검증 결과 (Validation Results)
 - **빌드 (`dotnet build`):** 성공 (경고 0, 오류 0)
 - **단위 및 E2E 테스트 (`dotnet test`):**
-  - 총 테스트 수: **49개**
-  - 통과: **49개**
+  - 총 테스트 수: **50개**
+  - 통과: **50개**
   - 실패: **0개**
-  - 실행 시간: **51 ms**
+  - 실행 시간: **56 ms**
 
 ---
 

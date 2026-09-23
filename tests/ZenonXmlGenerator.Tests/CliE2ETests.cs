@@ -16,6 +16,9 @@ public sealed class CliE2ETests
     private static readonly string SampleHvdcJsonPath = Path.Combine(
         AppContext.BaseDirectory, "Samples", "hvdc_station1_topology.json");
 
+    private static readonly string SampleHvdcFullJsonPath = Path.Combine(
+        AppContext.BaseDirectory, "Samples", "hvdc_full_system_topology.json");
+
     private static readonly string SampleJsonPath = Path.Combine(
         AppContext.BaseDirectory, "Samples", "sample_topology.json");
 
@@ -162,6 +165,69 @@ public sealed class CliE2ETests
             Assert.Equal("0", bayAc.SelectSingleNode("AlphaBackColor")!.InnerText);
             Assert.Equal("1", bayAc.SelectSingleNode("LineWidth")!.InnerText);
             Assert.Equal("5C6C75", bayAc.SelectSingleNode("LineColorEx")!.InnerText);
+        }
+        finally
+        {
+            if (File.Exists(tempXml)) File.Delete(tempXml);
+        }
+    }
+
+    [Fact]
+    public void Cli_GenerateHvdcFullBipoleXml_SucceedsAndProducesValidXml()
+    {
+        var tempXml = Path.Combine(Path.GetTempPath(), $"cli_test_hvdc_full_{Guid.NewGuid():N}.xml");
+        try
+        {
+            var exitCode = Program.Main([
+                "--input", SampleHvdcFullJsonPath,
+                "--output", tempXml,
+                "--screen-name", "HVDC_FULL_BIPOLE_SLD"
+            ]);
+
+            Assert.Equal(Program.ExitSuccess, exitCode);
+            Assert.True(File.Exists(tempXml));
+
+            // Validate UTF-16 LE BOM
+            var bytes = File.ReadAllBytes(tempXml);
+            Assert.True(bytes.Length >= 4);
+            Assert.Equal(0xFF, bytes[0]);
+            Assert.Equal(0xFE, bytes[1]);
+
+            // Validate XML structure
+            var doc = new XmlDocument();
+            using (var ms = new MemoryStream(bytes))
+            {
+                doc.Load(ms);
+            }
+
+            var picture = doc.DocumentElement!.SelectSingleNode("Apartment/Picture");
+            Assert.NotNull(picture);
+            Assert.Equal("HVDC_FULL_BIPOLE_SLD", picture.Attributes!["ShortName"]!.Value);
+            Assert.Equal("MAIN", picture.SelectSingleNode("Template")!.InnerText);
+            Assert.Equal("0", picture.SelectSingleNode("Type")!.InnerText);
+            Assert.Equal("TRUE", picture.SelectSingleNode("SizeFromTemplate")!.InnerText);
+
+            // Validate ST1 positive pole DC busbar is present (Busbar line TYPE=101, lineWidth=5, ALCUseColor=TRUE)
+            var dcPosBus = doc.DocumentElement!.SelectSingleNode(
+                "//*[@TYPE='101' and ALCUseColor]");
+            Assert.NotNull(dcPosBus);
+
+            // Validate first frame element is transparent rectangle (ST1 AC YARD frame)
+            var firstRect = doc.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
+            Assert.NotNull(firstRect);
+            Assert.Equal("102", firstRect.Attributes!["TYPE"]!.Value);
+            Assert.Equal("0", firstRect.SelectSingleNode("FillPattern")!.InnerText);
+            Assert.Equal("0", firstRect.SelectSingleNode("AlphaBackColor")!.InnerText);
+
+            // Validate ST1 MMC Pos symbol is present (check DynEleVar binding by variable name)
+            var st1MmcPos = doc.DocumentElement!.SelectSingleNode(
+                "//DynEleVar_0/ProjectVar[text()='ST1.MMC.POS_POLE.Status']/..");
+            Assert.NotNull(st1MmcPos);
+
+            // Validate ST2 MMC Neg symbol
+            var st2MmcNeg = doc.DocumentElement!.SelectSingleNode(
+                "//DynEleVar_0/ProjectVar[text()='ST2.MMC.NEG_POLE.Status']/..");
+            Assert.NotNull(st2MmcNeg);
         }
         finally
         {
