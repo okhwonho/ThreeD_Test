@@ -21,14 +21,17 @@ public static class XmlConstants
     public const string ApartmentVersion = "15000";
 
     // ─── Picture 컨테이너 기본값 ─────────────────────────────────────────
-    /// <summary>Picture 기본 타입 값 (Standard 화면 = 2)</summary>
-    public const string PictureType = "2";
+    /// <summary>Picture 기본 타입 값 (Standard 화면 = 0, Ground Truth)</summary>
+    public const string PictureType = "0";
 
     /// <summary>Picture 기본 배경색 (zenon 시스템 색상 DWORD)</summary>
     public const string PictureBackgroundColor = "80000037";
 
     /// <summary>Picture 기본 템플릿(프레임) 이름</summary>
-    public const string PictureDefaultTemplate = "Standard";
+    public const string PictureDefaultTemplate = "MAIN";
+
+    /// <summary>Picture SizeFromTemplate 기본값</summary>
+    public const string PictureSizeFromTemplate = "TRUE";
 
     // ─── NODE 속성 값 ────────────────────────────────────────────────────
     /// <summary>Elements_n/@NODE — 모든 화면 요소에 공통 적용</summary>

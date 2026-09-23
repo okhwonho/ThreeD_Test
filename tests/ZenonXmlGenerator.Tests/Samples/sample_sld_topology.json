@@ -1,9 +1,34 @@
 {
   "screenName": "Substation_154kV_SLD",
-  "template": "Standard",
+  "template": "MAIN",
+  "sizeFromTemplate": "TRUE",
   "width": 1920,
   "height": 1080,
   "elements": [
+    {
+      "type": "rectangle",
+      "id": "BAY1_FRAME",
+      "x": 180,
+      "y": 90,
+      "width": 380,
+      "height": 900,
+      "fillPattern": 0,
+      "alphaBackColor": 0,
+      "borderColor": "#5C6C75",
+      "lineWidth": 1
+    },
+    {
+      "type": "rectangle",
+      "id": "BAY2_FRAME",
+      "x": 700,
+      "y": 90,
+      "width": 380,
+      "height": 900,
+      "fillPattern": 0,
+      "alphaBackColor": 0,
+      "borderColor": "#5C6C75",
+      "lineWidth": 1
+    },
     {
       "type": "text",
       "id": "TXT_HEADER",
@@ -54,16 +79,6 @@
       "y2": 280,
       "color": "#0000FF",
       "lineWidth": 5
-    },
-    {
-      "type": "rectangle",
-      "id": "BAY1_FRAME",
-      "x": 180,
-      "y": 90,
-      "width": 380,
-      "height": 900,
-      "fillColor": "#F8F9FA",
-      "borderColor": "#CCCCCC"
     },
     {
       "type": "text",
@@ -294,16 +309,6 @@
       "text": "22.9kV Secondary Side",
       "fontSize": 12,
       "color": "#006600"
-    },
-    {
-      "type": "rectangle",
-      "id": "BAY2_FRAME",
-      "x": 700,
-      "y": 90,
-      "width": 380,
-      "height": 900,
-      "fillColor": "#F8F9FA",
-      "borderColor": "#CCCCCC"
     },
     {
       "type": "text",

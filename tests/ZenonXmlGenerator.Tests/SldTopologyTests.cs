@@ -31,8 +31,9 @@ public sealed class SldTopologyTests
         var picture = xml.DocumentElement!.SelectSingleNode("Apartment/Picture");
         Assert.NotNull(picture);
         Assert.Equal("Substation_154kV_SLD", picture.Attributes!["ShortName"]!.Value);
-        Assert.Equal("Standard", picture.SelectSingleNode("Template")!.InnerText);
-        Assert.Equal("2", picture.SelectSingleNode("Type")!.InnerText);
+        Assert.Equal("MAIN", picture.SelectSingleNode("Template")!.InnerText);
+        Assert.Equal("0", picture.SelectSingleNode("Type")!.InnerText);
+        Assert.Equal("TRUE", picture.SelectSingleNode("SizeFromTemplate")!.InnerText);
     }
 
     [Fact]
@@ -42,8 +43,8 @@ public sealed class SldTopologyTests
         var bytes = gen.GenerateFromJson(SampleSldJson);
         var xml = LoadXml(bytes);
 
-        // BUS_1 is Elements_2
-        var bus1 = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_2");
+        // BUS_1 is Elements_4
+        var bus1 = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_4");
         Assert.NotNull(bus1);
         Assert.Equal("101", bus1.Attributes!["TYPE"]!.Value);
         Assert.Equal("5", bus1.SelectSingleNode("LineWidth")!.InnerText);
@@ -57,8 +58,8 @@ public sealed class SldTopologyTests
         var bytes = gen.GenerateFromJson(SampleSldJson);
         var xml = LoadXml(bytes);
 
-        // CB11 is in Elements list
-        var cb11 = xml.DocumentElement!.SelectSingleNode("//Elements_15");
+        // CB11 is Elements_16 (Elements_0..1 Bay Frames, Elements_2..3 TXT, Elements_4 BUS1, Elements_5..6 TXT/BUS2, Elements_7 TXT, Elements_8 L, Elements_9 DS11, Elements_10 L, Elements_11 DS12, Elements_12..15 Lines, Elements_16 CB11)
+        var cb11 = xml.DocumentElement!.SelectSingleNode("//Elements_16");
         Assert.NotNull(cb11);
         Assert.Equal("16", cb11.Attributes!["TYPE"]!.Value);
         Assert.Equal("2", cb11.SelectSingleNode("ALCType")!.InnerText);
@@ -72,8 +73,8 @@ public sealed class SldTopologyTests
         var bytes = gen.GenerateFromJson(SampleSldJson);
         var xml = LoadXml(bytes);
 
-        // DS11 is Elements_8
-        var ds11 = xml.DocumentElement!.SelectSingleNode("//Elements_8");
+        // DS11 is Elements_9
+        var ds11 = xml.DocumentElement!.SelectSingleNode("//Elements_9");
         Assert.NotNull(ds11);
         Assert.Equal("16", ds11.Attributes!["TYPE"]!.Value);
         Assert.Equal("7", ds11.SelectSingleNode("ALCType")!.InnerText);
@@ -87,8 +88,8 @@ public sealed class SldTopologyTests
         var bytes = gen.GenerateFromJson(SampleSldJson);
         var xml = LoadXml(bytes);
 
-        // TR1 is Elements_23
-        var tr1 = xml.DocumentElement!.SelectSingleNode("//Elements_23");
+        // TR1 is Elements_24
+        var tr1 = xml.DocumentElement!.SelectSingleNode("//Elements_24");
         Assert.NotNull(tr1);
         Assert.Equal("16", tr1.Attributes!["TYPE"]!.Value);
         Assert.Equal("4", tr1.SelectSingleNode("ALCType")!.InnerText);

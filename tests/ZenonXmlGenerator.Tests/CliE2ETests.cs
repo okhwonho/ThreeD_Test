@@ -108,7 +108,9 @@ public sealed class CliE2ETests
             var picture = doc.DocumentElement!.SelectSingleNode("Apartment/Picture");
             Assert.NotNull(picture);
             Assert.Equal("Substation_154kV_SLD", picture.Attributes!["ShortName"]!.Value);
-            Assert.Equal("2", picture.SelectSingleNode("Type")!.InnerText);
+            Assert.Equal("0", picture.SelectSingleNode("Type")!.InnerText);
+            Assert.Equal("MAIN", picture.SelectSingleNode("Template")!.InnerText);
+            Assert.Equal("TRUE", picture.SelectSingleNode("SizeFromTemplate")!.InnerText);
         }
         finally
         {
@@ -148,8 +150,18 @@ public sealed class CliE2ETests
             Assert.NotNull(picture);
             Assert.Equal("HVDC_STATION1_SLD", picture.Attributes!["ShortName"]!.Value);
             Assert.Equal("HVDC_STATION1_SLD", picture.SelectSingleNode("Title")!.InnerText);
-            Assert.Equal("Standard", picture.SelectSingleNode("Template")!.InnerText);
-            Assert.Equal("2", picture.SelectSingleNode("Type")!.InnerText);
+            Assert.Equal("MAIN", picture.SelectSingleNode("Template")!.InnerText);
+            Assert.Equal("0", picture.SelectSingleNode("Type")!.InnerText);
+            Assert.Equal("TRUE", picture.SelectSingleNode("SizeFromTemplate")!.InnerText);
+
+            // Validate Bay frame transparent properties
+            var bayAc = doc.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
+            Assert.NotNull(bayAc);
+            Assert.Equal("102", bayAc.Attributes!["TYPE"]!.Value);
+            Assert.Equal("0", bayAc.SelectSingleNode("FillPattern")!.InnerText);
+            Assert.Equal("0", bayAc.SelectSingleNode("AlphaBackColor")!.InnerText);
+            Assert.Equal("1", bayAc.SelectSingleNode("LineWidth")!.InnerText);
+            Assert.Equal("5C6C75", bayAc.SelectSingleNode("LineColorEx")!.InnerText);
         }
         finally
         {

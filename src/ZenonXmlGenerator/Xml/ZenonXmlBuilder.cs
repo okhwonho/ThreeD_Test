@@ -18,7 +18,8 @@ namespace ZenonXmlGenerator.Xml;
 ///     &lt;Picture ShortName="{screenName}"&gt;
 ///       &lt;Title&gt;{screenName}&lt;/Title&gt;
 ///       &lt;Template&gt;{template}&lt;/Template&gt;
-///       &lt;Type&gt;2&lt;/Type&gt;
+///       &lt;Type&gt;0&lt;/Type&gt;
+///       &lt;SizeFromTemplate&gt;TRUE&lt;/SizeFromTemplate&gt;
 ///       &lt;Width&gt;…&lt;/Width&gt;
 ///       &lt;Height&gt;…&lt;/Height&gt;
 ///       &lt;BackgroundColor&gt;80000037&lt;/BackgroundColor&gt;
@@ -116,12 +117,13 @@ public sealed class ZenonXmlBuilder
         w.WriteAttributeString("ShortName", doc.ScreenName);
 
         // Picture 메타데이터
-        w.WriteElementString("Title",           doc.ScreenName);
-        w.WriteElementString("Template",        string.IsNullOrWhiteSpace(doc.Template) ? XmlConstants.PictureDefaultTemplate : doc.Template);
-        w.WriteElementString("Type",            XmlConstants.PictureType);
-        w.WriteElementString("Width",           doc.Width.ToString());
-        w.WriteElementString("Height",          doc.Height.ToString());
-        w.WriteElementString("BackgroundColor", XmlConstants.PictureBackgroundColor);
+        w.WriteElementString("Title",            doc.ScreenName);
+        w.WriteElementString("Template",         string.IsNullOrWhiteSpace(doc.Template) ? XmlConstants.PictureDefaultTemplate : doc.Template);
+        w.WriteElementString("Type",             XmlConstants.PictureType);
+        w.WriteElementString("SizeFromTemplate", string.IsNullOrWhiteSpace(doc.SizeFromTemplate) ? XmlConstants.PictureSizeFromTemplate : doc.SizeFromTemplate);
+        w.WriteElementString("Width",            doc.Width.ToString());
+        w.WriteElementString("Height",           doc.Height.ToString());
+        w.WriteElementString("BackgroundColor",  XmlConstants.PictureBackgroundColor);
 
         // <Elements_0 NODE="zenOn(R) embedded object" TYPE="…"> … </Elements_0>
         int index = 0;

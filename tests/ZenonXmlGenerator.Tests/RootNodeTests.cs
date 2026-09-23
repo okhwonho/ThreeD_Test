@@ -107,15 +107,23 @@ public sealed class RootNodeTests
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
         var template = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Template")!.InnerText;
-        Assert.Equal("Standard", template);
+        Assert.Equal("MAIN", template);
     }
 
     [Fact]
-    public void Picture_HasTypeMetadata_StandardScreen2()
+    public void Picture_HasTypeMetadata_StandardScreen0()
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
         var type = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Type")!.InnerText;
-        Assert.Equal("2", type);
+        Assert.Equal("0", type);
+    }
+
+    [Fact]
+    public void Picture_HasSizeFromTemplateMetadata()
+    {
+        var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
+        var sizeFromTemplate = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/SizeFromTemplate")!.InnerText;
+        Assert.Equal("TRUE", sizeFromTemplate);
     }
 
     [Fact]
@@ -134,5 +142,18 @@ public sealed class RootNodeTests
         var h = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Height")!.InnerText;
         Assert.Equal("1920", w);
         Assert.Equal("1080", h);
+    }
+
+    [Fact]
+    public void RectangleElement_OutputsTransparentAttributes()
+    {
+        var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
+        var rect = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
+        Assert.NotNull(rect);
+        Assert.Equal("102", rect.Attributes!["TYPE"]!.Value);
+        Assert.Equal("0", rect.SelectSingleNode("FillPattern")!.InnerText);
+        Assert.Equal("0", rect.SelectSingleNode("AlphaBackColor")!.InnerText);
+        Assert.Equal("1", rect.SelectSingleNode("LineWidth")!.InnerText);
+        Assert.Equal("5C6C75", rect.SelectSingleNode("LineColorEx")!.InnerText);
     }
 }

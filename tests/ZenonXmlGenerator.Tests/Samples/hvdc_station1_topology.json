@@ -1,9 +1,58 @@
 {
   "screenName": "HVDC_STATION1_SLD",
-  "template": "Standard",
+  "template": "MAIN",
+  "sizeFromTemplate": "TRUE",
   "width": 1920,
   "height": 1080,
   "elements": [
+    {
+      "type": "rectangle",
+      "id": "BAY_AC_YARD",
+      "x": 100,
+      "y": 90,
+      "width": 420,
+      "height": 900,
+      "fillPattern": 0,
+      "alphaBackColor": 0,
+      "borderColor": "#5C6C75",
+      "lineWidth": 1
+    },
+    {
+      "type": "rectangle",
+      "id": "BAY_CONVERTER_TR",
+      "x": 580,
+      "y": 90,
+      "width": 420,
+      "height": 900,
+      "fillPattern": 0,
+      "alphaBackColor": 0,
+      "borderColor": "#5C6C75",
+      "lineWidth": 1
+    },
+    {
+      "type": "rectangle",
+      "id": "BAY_VALVE_HALL",
+      "x": 1060,
+      "y": 90,
+      "width": 420,
+      "height": 900,
+      "fillPattern": 0,
+      "alphaBackColor": 0,
+      "borderColor": "#5C6C75",
+      "lineWidth": 1
+    },
+    {
+      "type": "rectangle",
+      "id": "BAY_DC_YARD",
+      "x": 1540,
+      "y": 90,
+      "width": 340,
+      "height": 900,
+      "fillPattern": 0,
+      "alphaBackColor": 0,
+      "borderColor": "#5C6C75",
+      "lineWidth": 1
+    },
     {
       "type": "text",
       "id": "TXT_TITLE",
@@ -54,16 +103,6 @@
       "y2": 270,
       "color": "#7030A0",
       "lineWidth": 5
-    },
-    {
-      "type": "rectangle",
-      "id": "BAY_AC_YARD",
-      "x": 100,
-      "y": 90,
-      "width": 420,
-      "height": 900,
-      "fillColor": "#F2F4F7",
-      "borderColor": "#B0C4DE"
     },
     {
       "type": "text",
@@ -265,16 +304,6 @@
       "lineWidth": 2
     },
     {
-      "type": "rectangle",
-      "id": "BAY_CONVERTER_TR",
-      "x": 580,
-      "y": 90,
-      "width": 420,
-      "height": 900,
-      "fillColor": "#F2F4F7",
-      "borderColor": "#B0C4DE"
-    },
-    {
       "type": "text",
       "id": "BAY_TR_TITLE",
       "x": 600,
@@ -337,16 +366,6 @@
       "lineWidth": 2
     },
     {
-      "type": "rectangle",
-      "id": "BAY_VALVE_HALL",
-      "x": 1060,
-      "y": 90,
-      "width": 420,
-      "height": 900,
-      "fillColor": "#FFF2CC",
-      "borderColor": "#D6B656"
-    },
-    {
       "type": "text",
       "id": "BAY_VALVE_TITLE",
       "x": 1080,
@@ -401,16 +420,6 @@
       "text": "MMC ±500kV 1500MW",
       "fontSize": 12,
       "color": "#B45F06"
-    },
-    {
-      "type": "rectangle",
-      "id": "BAY_DC_YARD",
-      "x": 1540,
-      "y": 90,
-      "width": 340,
-      "height": 900,
-      "fillColor": "#FCE5CD",
-      "borderColor": "#E69138"
     },
     {
       "type": "text",
