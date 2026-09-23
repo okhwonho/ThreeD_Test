@@ -125,9 +125,13 @@ public sealed class ZenonXmlBuilder
         w.WriteElementString("Height",           doc.Height.ToString());
         w.WriteElementString("BackgroundColor",  XmlConstants.PictureBackgroundColor);
 
+        // ─── 파이프라인: OrthogonalRouter → tagLabel 자동 주입 ────────────
+        var routed   = OrthogonalRouter.Route(doc.Elements);
+        var elements = InjectTagLabels(routed);
+
         // <Elements_0 NODE="zenOn(R) embedded object" TYPE="…"> … </Elements_0>
         int index = 0;
-        foreach (var element in doc.Elements)
+        foreach (var element in elements)
         {
             if (_writers.TryGetValue(element.GetType(), out var writer))
             {
@@ -141,5 +145,41 @@ public sealed class ZenonXmlBuilder
         }
 
         w.WriteEndElement(); // Picture
+    }
+
+    /// <summary>
+    /// SymbolElement 중 TagLabel이 설정된 항목의 바로 앞에 자동 TextElement를 삽입한다.
+    /// TextElement 위치: 심볼 중심 X, 심볼 EffectiveY - XmlConstants.TagLabelYOffset
+    /// </summary>
+    private static List<TopologyElement> InjectTagLabels(List<TopologyElement> elements)
+    {
+        var result = new List<TopologyElement>(elements.Count * 2);
+
+        foreach (var element in elements)
+        {
+            if (element is SymbolElement sym && !string.IsNullOrWhiteSpace(sym.TagLabel))
+            {
+                // 심볼 중심 X 계산
+                int centerX = sym.CenterX ?? (sym.EffectiveX + sym.EffectiveWidth / 2);
+                int labelY  = sym.EffectiveY - XmlConstants.TagLabelYOffset;
+                int labelX  = centerX - (int)(XmlConstants.TagLabelFontSize * (sym.TagLabel!.Length + 1) * 0.3);
+
+                var labelElem = new TextElement
+                {
+                    Id       = sym.Id + "_TAG",
+                    X        = labelX,
+                    Y        = labelY,
+                    Text     = sym.TagLabel,
+                    FontSize = XmlConstants.TagLabelFontSize,
+                    Color    = XmlConstants.TagLabelColor,
+                };
+
+                result.Add(labelElem); // 레이블을 심볼 앞에 삽입
+            }
+
+            result.Add(element);
+        }
+
+        return result;
     }
 }

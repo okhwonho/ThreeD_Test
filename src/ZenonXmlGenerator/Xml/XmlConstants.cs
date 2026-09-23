@@ -66,4 +66,37 @@ public static class XmlConstants
 
     /// <summary>변압기 ALCType = 4</summary>
     public const string ALCTypeTransformer = "4";
+
+    // ─── 기기 심볼 표준 크기 (Symbol Size Standardization) ───────────────
+    /// <summary>차단기(CircuitBreaker) 기본 크기: 32×32 px</summary>
+    public const int SymbolSizeCB = 32;
+
+    /// <summary>단로기(Disconnector) 기본 크기: 24×24 px</summary>
+    public const int SymbolSizeDS = 24;
+
+    /// <summary>변압기(Transformer) 기본 크기: 60×60 px</summary>
+    public const int SymbolSizeTR = 60;
+
+    /// <summary>기타 심볼(CT, PT, ES 등) 기본 크기: 28×28 px</summary>
+    public const int SymbolSizeDefault = 28;
+
+    // ─── 시각적 계층화 선 굵기 (Visual Hierarchy Line Widths) ─────────────
+    /// <summary>주 모선(Busbar) 기본 선 굵기 = 12</summary>
+    public const int LineWidthBusbar = 12;
+
+    /// <summary>주요 분기/극 라인(Feeder/Pole) 기본 선 굵기 = 6</summary>
+    public const int LineWidthFeeder = 6;
+
+    /// <summary>일반 연결선 기본 선 굵기 = 3</summary>
+    public const int LineWidthDefault = 3;
+
+    // ─── 텍스트 레이블 자동 오프셋 ────────────────────────────────────────
+    /// <summary>TagLabel 텍스트를 심볼 중심 Y에서 위로 띄우는 픽셀 오프셋 = 30</summary>
+    public const int TagLabelYOffset = 30;
+
+    /// <summary>TagLabel 텍스트 기본 폰트 크기 = 9</summary>
+    public const int TagLabelFontSize = 9;
+
+    /// <summary>TagLabel 텍스트 기본 색상 (짙은 회색)</summary>
+    public const string TagLabelColor = "#444444";
 }

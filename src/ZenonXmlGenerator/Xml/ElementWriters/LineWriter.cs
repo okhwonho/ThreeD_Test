@@ -25,7 +25,7 @@ public sealed class LineWriter : IElementWriter
         writer.WriteElementString("Width",     line.Dx.ToString());
         writer.WriteElementString("Height",    line.Dy.ToString());
         writer.WriteElementString("ForeColor", ColorConverter.ToColorRefString(line.Color));
-        writer.WriteElementString("LineWidth", line.LineWidth.ToString());
+        writer.WriteElementString("LineWidth", line.EffectiveLineWidth.ToString());
 
         if (!string.IsNullOrWhiteSpace(line.ALCUseColor))
         {

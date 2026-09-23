@@ -61,11 +61,37 @@ public sealed class SymbolElement : TopologyElement
 
     /// <summary>실제 좌상단 X 좌표 (CenterX 기반 계산 fallback 지원).</summary>
     [JsonIgnore]
-    public int EffectiveX => (X == 0 && CenterX.HasValue && Width > 0) ? CenterX.Value - (Width / 2) : X;
+    public int EffectiveX => (X == 0 && CenterX.HasValue && EffectiveWidth > 0) ? CenterX.Value - (EffectiveWidth / 2) : X;
 
     /// <summary>실제 좌상단 Y 좌표 (CenterY 기반 계산 fallback 지원).</summary>
     [JsonIgnore]
-    public int EffectiveY => (Y == 0 && CenterY.HasValue && Height > 0) ? CenterY.Value - (Height / 2) : Y;
+    public int EffectiveY => (Y == 0 && CenterY.HasValue && EffectiveHeight > 0) ? CenterY.Value - (EffectiveHeight / 2) : Y;
+
+    /// <summary>
+    /// 실제 사용할 심볼 너비.
+    /// JSON에서 Width > 0이면 그대로, 0이면 DeviceType 기반 표준 크기 적용.
+    /// </summary>
+    [JsonIgnore]
+    public int EffectiveWidth => Width > 0 ? Width : DeviceType switch
+    {
+        Models.DeviceType.CircuitBreaker => Xml.XmlConstants.SymbolSizeCB,
+        Models.DeviceType.Disconnector   => Xml.XmlConstants.SymbolSizeDS,
+        Models.DeviceType.Transformer    => Xml.XmlConstants.SymbolSizeTR,
+        _ => Xml.XmlConstants.SymbolSizeDefault,
+    };
+
+    /// <summary>
+    /// 실제 사용할 심볼 높이.
+    /// JSON에서 Height > 0이면 그대로, 0이면 DeviceType 기반 표준 크기 적용.
+    /// </summary>
+    [JsonIgnore]
+    public int EffectiveHeight => Height > 0 ? Height : DeviceType switch
+    {
+        Models.DeviceType.CircuitBreaker => Xml.XmlConstants.SymbolSizeCB,
+        Models.DeviceType.Disconnector   => Xml.XmlConstants.SymbolSizeDS,
+        Models.DeviceType.Transformer    => Xml.XmlConstants.SymbolSizeTR,
+        _ => Xml.XmlConstants.SymbolSizeDefault,
+    };
 
     /// <summary>
     /// 유효 ALCType 값 (명시적 ALCType 우선, 없으면 DeviceType 기반 자동 도출).

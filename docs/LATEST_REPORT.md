@@ -1,48 +1,70 @@
 # Latest Execution Report
 
-> **작업 일시:** 2026-09-23 11:10 KST  
-> **마일스톤:** HVDC Bipole Full System SLD 토폴로지 구축 및 E2E 변환 검증
+> **작업 일시:** 2026-09-23 11:58 KST  
+> **마일스톤:** ZenonXmlGenerator 렌더링 품질 향상 — 직교 배선, 심볼 규격화, 텍스트 투명화, 시각 계층화
 
 ---
 
 ## 1. 개요 (Summary)
-- **HVDC 전체 바이폴 단선도(3840×1080) 토폴로지 데이터 구축:**
-  - `tests/ZenonXmlGenerator.Tests/Samples/hvdc_full_system_topology.json` 신규 작성.
-  - **캔버스:** 3840×1080 (와이드 4K 듀얼 역방향 스크린 사이즈)
-  - **구성 구역 (9개 프레임 박스, 투명 외곽선 전용):**
-    - ST1 AC 스위치야드 (x=30~630), ST1 변환 TR 베이 (x=640~1020), ST1 MMC 밸브홀 +Pole (x=1030~1470), ST1 MMC 밸브홀 -Pole (x=1030~1470)
-    - DC 바이폴 중앙 연계 구역 (x=1480~2360): +525kV/−525kV 극성별 DC 모선, DMR 귀선, 접지 스위치
-    - ST2 MMC 밸브홀 +Pole/−Pole (x=2370~2810), ST2 변환 TR 베이 (x=2820~3200), ST2 AC 스위치야드 (x=3210~3810)
-  - **기기 총괄:** Busbar 6개, CB 14개, DS 16개, TR 4개(Y-Y-Δ 3권선), MMC Converter 4개(Pos/Neg Pole × ST1/ST2), CT 2개, ES 10개, DMR 귀선 스위치 3개, 모니터링 테이블 박스 6개
-  - **태그 포인트:** `00CB`, `71CB`, `72CB`, `DS1~DS3`, `P1 ES`, `P2 ES`, `N1 ES`, `N2 ES`, `PLD DS`, `DMR-SW1`, `DMR-SW2`, `GND SW`, TR-1/TR-2(Y-Y-Δ), MMC Valve Hall (±Pole) × ST1/ST2
-  - **중앙 스펙 블록:** `DIRECTION: ST1→ST2`, `P: 2000.0 MW`, `Vdc: ±525.0 kV`
 
-- **zenon-gen CLI 배치 실행 결과:**
-  - `output_hvdc_full_system.xml` — **156,298 bytes, UTF-16 LE BOM** (`FF FE 3C 00`) 정상.
+### 1.1 직교 배선(Orthogonal Routing) 강제 로직
+- `src/ZenonXmlGenerator/Xml/OrthogonalRouter.cs` [신규]:
+  - `LineElement.IsDiagonal`(x1≠x2 AND y1≠y2) 감지 → T-Junction(꺾임점: `x2, y1`) 계산
+  - 수평선(ID+`_H`) + 수직선(ID+`_V`) 2개 직교 세그먼트로 자동 분할
+  - 비(非) LineElement는 pass-through
+- `ZenonXmlBuilder.WritePicture`: `OrthogonalRouter.Route()` 파이프라인 선행 적용
 
-- **E2E 테스트 케이스 추가:**
-  - `CliE2ETests.Cli_GenerateHvdcFullBipoleXml_SucceedsAndProducesValidXml` 신규 추가.
-  - 검증 항목: BOM, Screen Type `0`, Template `MAIN`, `SizeFromTemplate TRUE`, 투명 베이 프레임(Type 102, FillPattern 0, AlphaBackColor 0), ST1/ST2 MMC 변수 바인딩(DynEleVar_0 ProjectVar).
+### 1.2 기기 심볼 규격화 (Symbol Size Standardization)
+- `XmlConstants.cs`에 표준 크기 상수 추가:
+  - `SymbolSizeCB = 32` (차단기 32×32 px)
+  - `SymbolSizeDS = 24` (단로기 24×24 px)
+  - `SymbolSizeTR = 60` (변압기 60×60 px)
+  - `SymbolSizeDefault = 28` (CT, PT, ES 등)
+- `SymbolElement.EffectiveWidth/EffectiveHeight`: JSON에 Width=0이면 DeviceType 기반 표준 크기 자동 적용
+- `SymbolElement.EffectiveX/EffectiveY`: `EffectiveWidth` 기반 centerX/Y 스냅 정밀화
+- `SymbolWriter`: `sym.Width/Height` → `sym.EffectiveWidth/EffectiveHeight` 사용으로 변경
+
+### 1.3 텍스트 배경 투명화
+- `TextWriter.cs`: `<AlphaBackColor>0</AlphaBackColor>` + `<FillStyle><Transparent>TRUE</Transparent></FillStyle>` 출력 추가
+
+### 1.4 TagLabel 자동 오프셋 주입
+- `XmlConstants.cs`: `TagLabelYOffset = 30`, `TagLabelFontSize = 9`, `TagLabelColor = "#444444"` 상수 추가
+- `ZenonXmlBuilder.InjectTagLabels()`: SymbolElement.TagLabel이 있으면 심볼 바로 앞에 TextElement 자동 삽입 (위치: 중심 X, EffectiveY - 30px)
+
+### 1.5 시각적 계층화 선 굵기 (Visual Hierarchy)
+- `XmlConstants.cs`: `LineWidthBusbar = 12`, `LineWidthFeeder = 6`, `LineWidthDefault = 3` 상수 추가
+- `LineElement.EffectiveLineWidth`: JSON LineWidth=1(기본)이면 DeviceType=Busbar→12, 나머지→3
+- `LineWriter`: `line.LineWidth` → `line.EffectiveLineWidth` 사용으로 변경
+
+### 1.6 산출물 재생성
+- `output_hvdc_full_system.xml` — **174,046 bytes** (기존 156,298 → 대각선 분할 + tagLabel 주입으로 증가), UTF-16 LE BOM 유지
 
 ---
 
-## 2. 세부 변경 내역 (Detailed Changes)
-1. **`tests/.../Samples/hvdc_full_system_topology.json` [신규]:**
-   - 3840×1080 캔버스, 9개 투명 구역 프레임, ST1/ST2 대칭 AC야드+TR+MMC, DC 바이폴 +/-Pole 모선, DMR 귀선, 방향 지시 화살표, 모니터링 블록 텍스트.
-2. **`tests/.../CliE2ETests.cs` [수정]:**
-   - `SampleHvdcFullJsonPath` 경로 상수 및 `Cli_GenerateHvdcFullBipoleXml_SucceedsAndProducesValidXml` E2E 테스트 추가.
-3. **`output_hvdc_full_system.xml` [신규]:**
-   - CLI 실행 생성 산출물 (156,298 bytes, UTF-16 LE BOM).
+## 2. 세부 변경 파일 목록
+| 파일 | 변경 유형 | 주요 내용 |
+|------|-----------|-----------|
+| `src/.../Xml/XmlConstants.cs` | 수정 | 심볼 크기, 선 굵기 계층, tagLabel 상수 추가 |
+| `src/.../Xml/OrthogonalRouter.cs` | **신규** | 대각선 → 직교 2-세그먼트 분할 유틸리티 |
+| `src/.../Xml/ZenonXmlBuilder.cs` | 수정 | OrthogonalRouter + InjectTagLabels 파이프라인 통합 |
+| `src/.../Models/LineElement.cs` | 수정 | `EffectiveLineWidth`, `IsDiagonal` 추가 |
+| `src/.../Models/SymbolElement.cs` | 수정 | `EffectiveWidth`, `EffectiveHeight`, `EffectiveX/Y` 정밀화 |
+| `src/.../ElementWriters/LineWriter.cs` | 수정 | `EffectiveLineWidth` 사용 |
+| `src/.../ElementWriters/SymbolWriter.cs` | 수정 | `EffectiveWidth/Height` 사용 |
+| `src/.../ElementWriters/TextWriter.cs` | 수정 | 투명 배경 태그 추가 |
+| `tests/.../LineCoordinateTests.cs` | 수정 | 대각선 테스트를 OrthogonalRouter 분할 검증으로 업데이트 |
+| `tests/.../OrthogonalRouterTests.cs` | **신규** | 17개 단위 테스트 (라우터, IsDiagonal, EffectiveLineWidth, EffectiveWidth/Height, CenterSnap) |
+| `output_hvdc_full_system.xml` | 재생성 | 174,046 bytes, UTF-16 LE BOM |
 
 ---
 
 ## 3. 검증 결과 (Validation Results)
 - **빌드 (`dotnet build`):** 성공 (경고 0, 오류 0)
 - **단위 및 E2E 테스트 (`dotnet test`):**
-  - 총 테스트 수: **50개**
-  - 통과: **50개**
+  - 총 테스트 수: **67개** (기존 50 + OrthogonalRouter 신규 17)
+  - 통과: **67개**
   - 실패: **0개**
-  - 실행 시간: **56 ms**
+  - 실행 시간: **57 ms**
 
 ---
 

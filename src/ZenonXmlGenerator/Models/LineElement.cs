@@ -42,4 +42,23 @@ public sealed class LineElement : TopologyElement
     [JsonIgnore] public int Dx => X2 - X1;
     /// <summary>Height = y2 - y1 (dy; 수직 상향이면 음수)</summary>
     [JsonIgnore] public int Dy => Y2 - Y1;
+
+    /// <summary>
+    /// 시각적 계층화 선 굵기.
+    /// JSON에서 LineWidth가 기본값(1) 이상이면 그대로 사용.
+    /// DeviceType=Busbar면 12, Feeder면 6, 그 외 3.
+    /// </summary>
+    [JsonIgnore]
+    public int EffectiveLineWidth => LineWidth > 1 ? LineWidth : DeviceType switch
+    {
+        Models.DeviceType.Busbar => Xml.XmlConstants.LineWidthBusbar,
+        _ => Xml.XmlConstants.LineWidthDefault,
+    };
+
+    /// <summary>
+    /// 사선(대각선) 여부: x1≠x2 AND y1≠y2 이면 true.
+    /// OrthogonalRouter가 2개의 직교선으로 분할 대상으로 처리한다.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsDiagonal => X1 != X2 && Y1 != Y2;
 }

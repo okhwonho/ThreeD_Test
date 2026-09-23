@@ -100,14 +100,29 @@ public sealed class LineCoordinateTests
     }
 
     [Fact]
-    public void Xml_DiagonalLine_CorrectCoordinates()
+    public void Xml_DiagonalLine_SplitIntoTwoOrthogonalSegments()
     {
+        // 대각선 (100,100) → (300,300) 은 OrthogonalRouter에 의해 2개의 직교선으로 분할.
+        // 수평선: (100,100) → (300,100)  Width=200, Height=0
+        // 수직선: (300,100) → (300,300)  Width=0,   Height=200
         var line = new LineElement { Id = "L3", X1 = 100, Y1 = 100, X2 = 300, Y2 = 300 };
         var xml  = BuildFromElements([line]);
-        var ele  = GetElement(xml, 0);
 
-        Assert.Equal("200", ele.SelectSingleNode("Width")!.InnerText);
-        Assert.Equal("200", ele.SelectSingleNode("Height")!.InnerText);
+        // Elements_0: 수평 세그먼트
+        var seg1 = GetElement(xml, 0);
+        Assert.Equal("101", seg1.GetAttribute("TYPE"));
+        Assert.Equal("100", seg1.SelectSingleNode("StartX")!.InnerText);
+        Assert.Equal("100", seg1.SelectSingleNode("StartY")!.InnerText);
+        Assert.Equal("200", seg1.SelectSingleNode("Width")!.InnerText);
+        Assert.Equal("0",   seg1.SelectSingleNode("Height")!.InnerText);
+
+        // Elements_1: 수직 세그먼트
+        var seg2 = GetElement(xml, 1);
+        Assert.Equal("101", seg2.GetAttribute("TYPE"));
+        Assert.Equal("300", seg2.SelectSingleNode("StartX")!.InnerText);
+        Assert.Equal("100", seg2.SelectSingleNode("StartY")!.InnerText);
+        Assert.Equal("0",   seg2.SelectSingleNode("Width")!.InnerText);
+        Assert.Equal("200", seg2.SelectSingleNode("Height")!.InnerText);
     }
 
     // ─── Elements_n 태그명 및 NODE 속성 검증 ─────────────────────────
