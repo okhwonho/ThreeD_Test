@@ -101,8 +101,8 @@ public static class XmlConstants
     public const int LineWidthDefault = 3;
 
     // ─── 텍스트 레이블 자동 오프셋 ────────────────────────────────────────
-    /// <summary>TagLabel 텍스트를 심볼 중심 Y에서 위로 띄우는 픽셀 오프셋 = 30</summary>
-    public const int TagLabelYOffset = 35;
+    /// <summary>TagLabel 텍스트를 심볼 상단에서 위로 띄우는 픽셀 오프셋 = 40</summary>
+    public const int TagLabelYOffset = 40;
 
     /// <summary>TagLabel 텍스트 기본 폰트 크기 = 9</summary>
     public const int TagLabelFontSize = 9;

@@ -280,4 +280,50 @@ public sealed class SldTopologyTests
             Assert.Equal(1080, sym.CenterY);
         }
     }
+
+    [Fact]
+    public void HvdcFullSystem_MeteringCardBounds_AllTextsFitComfortablyWithAtLeast10PxMargin()
+    {
+        var fullJsonPath = Path.Combine("Samples", "hvdc_full_system_topology.json");
+        var jsonText = File.ReadAllText(fullJsonPath);
+        var doc = System.Text.Json.JsonSerializer.Deserialize<TopologyDocument>(jsonText)!;
+        var elemDict = System.Linq.Enumerable.ToDictionary(doc.Elements, e => e.Id);
+
+        var cardGroups = new (string BoxId, string[] TextIds)[]
+        {
+            ("DC_SPEC_BOX", ["TXT_DC_DIR", "TXT_DC_POWER", "TXT_DC_VDC", "TXT_DC_IDC"]),
+            ("DC_POS_MONITOR", ["TXT_DC_POS_MONITOR_V", "TXT_DC_POS_MONITOR_I", "TXT_DC_POS_MONITOR_P"]),
+            ("DC_NEG_MONITOR", ["TXT_DC_NEG_MONITOR_V", "TXT_DC_NEG_MONITOR_I", "TXT_DC_NEG_MONITOR_P"]),
+            ("ST1_PCC_BOX", ["TXT_ST1_PCC"]),
+            ("ST2_PCC_BOX", ["TXT_ST2_PCC"]),
+        };
+
+        foreach (var (boxId, textIds) in cardGroups)
+        {
+            var box = (RectangleElement)elemDict[boxId];
+            int boxLeft = box.X;
+            int boxTop = box.Y;
+            int boxRight = box.X + box.Width;
+            int boxBottom = box.Y + box.Height;
+
+            foreach (var textId in textIds)
+            {
+                var text = (TextElement)elemDict[textId];
+                int textLeft = text.X;
+                int textTop = text.Y;
+                int textRight = text.X + text.EffectiveWidth;
+                int textBottom = text.Y + text.EffectiveHeight;
+
+                int marginLeft = textLeft - boxLeft;
+                int marginRight = boxRight - textRight;
+                int marginTop = textTop - boxTop;
+                int marginBottom = boxBottom - textBottom;
+
+                Assert.True(marginLeft >= 10, $"{textId} left margin in {boxId} is {marginLeft} < 10");
+                Assert.True(marginRight >= 10, $"{textId} right margin in {boxId} is {marginRight} < 10");
+                Assert.True(marginTop >= 10, $"{textId} top margin in {boxId} is {marginTop} < 10");
+                Assert.True(marginBottom >= 10, $"{textId} bottom margin in {boxId} is {marginBottom} < 10");
+            }
+        }
+    }
 }

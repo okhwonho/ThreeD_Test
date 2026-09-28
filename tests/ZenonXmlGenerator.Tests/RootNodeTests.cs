@@ -181,25 +181,47 @@ public sealed class RootNodeTests
         Assert.Equal("0", text.SelectSingleNode("AlphaBackColor")!.InnerText);
         Assert.Equal("0", text.SelectSingleNode("BackColor")!.InnerText);
         Assert.NotNull(text.SelectSingleNode("FillStyle"));
-        Assert.Equal("24", text.SelectSingleNode("Height")!.InnerText);
+        Assert.Equal("28", text.SelectSingleNode("Height")!.InnerText);
+        Assert.Equal("96", text.SelectSingleNode("Width")!.InnerText);
     }
 
     [Fact]
-    public void TextElement_EffectiveHeight_GuaranteesAtLeast24PxPerLine()
+    public void TextElement_EffectiveHeight_GuaranteesAtLeast28PxPerLine()
     {
         var single = new TextElement { Text = "Line", FontSize = 12 };
-        Assert.Equal(24, single.EffectiveHeight);
+        Assert.Equal(28, single.EffectiveHeight);
 
         var multi = new TextElement { Text = "Line1\nLine2\nLine3", FontSize = 12 };
-        Assert.Equal(72, multi.EffectiveHeight);
+        Assert.Equal(84, multi.EffectiveHeight);
 
         var smallExplicit = new TextElement { Text = "Line", FontSize = 12, Height = 10 };
-        Assert.Equal(24, smallExplicit.EffectiveHeight);
+        Assert.Equal(28, smallExplicit.EffectiveHeight);
 
         var largeExplicit = new TextElement { Text = "Line", FontSize = 12, Height = 50 };
         Assert.Equal(50, largeExplicit.EffectiveHeight);
 
         var largeFont = new TextElement { Text = "Line", FontSize = 20 };
         Assert.Equal(32, largeFont.EffectiveHeight);
+    }
+
+    [Fact]
+    public void TextElement_EffectiveWidth_EnforcesFormula()
+    {
+        var shortText = new TextElement { Text = "Hi", FontSize = 12 };
+        Assert.Equal(80, shortText.EffectiveWidth);
+
+        var longText = new TextElement { Text = new string('A', 30), FontSize = 12 };
+        Assert.Equal(360, longText.EffectiveWidth);
+
+        var multiLine = new TextElement { Text = "Short\nLong line with 25 chars!!", FontSize = 12 };
+        // max line is 25 chars -> 25 * 12 = 300
+        Assert.Equal(300, multiLine.EffectiveWidth);
+
+        var smallExplicit = new TextElement { Text = "Main Bus", Width = 50 };
+        // 8 chars -> 96px, Width 50 < 96 -> 96
+        Assert.Equal(96, smallExplicit.EffectiveWidth);
+
+        var largeExplicit = new TextElement { Text = "Main Bus", Width = 200 };
+        Assert.Equal(200, largeExplicit.EffectiveWidth);
     }
 }

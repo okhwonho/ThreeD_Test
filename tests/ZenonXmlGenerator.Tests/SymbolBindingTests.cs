@@ -211,8 +211,12 @@ public sealed class SymbolBindingTests
         Assert.Equal("107", tagNode.Attributes!["TYPE"]!.Value);
         Assert.Equal("#1 MAIN TR", tagNode.SelectSingleNode("Text")!.InnerText);
 
-        // symTop = CenterY(500) - 44 = 456; labelY = 456 - TagLabelYOffset(35) = 421
-        Assert.Equal("421", tagNode.SelectSingleNode("StartY")!.InnerText);
+        // symTop = CenterY(500) - 44 = 456; labelY = 456 - TagLabelYOffset(40) = 416
+        Assert.Equal("416", tagNode.SelectSingleNode("StartY")!.InnerText);
+        // tagWidth = Math.Max(80, 10 * 12) = 120; labelX = 500 - 120 / 2 = 440
+        Assert.Equal("440", tagNode.SelectSingleNode("StartX")!.InnerText);
+        Assert.Equal("120", tagNode.SelectSingleNode("Width")!.InnerText);
+        Assert.Equal("28", tagNode.SelectSingleNode("Height")!.InnerText);
     }
 
     [Fact]
@@ -232,7 +236,11 @@ public sealed class SymbolBindingTests
         Assert.Equal("107", tagNode.Attributes!["TYPE"]!.Value);
         Assert.Equal("CB_52", tagNode.SelectSingleNode("Text")!.InnerText);
 
-        // EffectiveY = 300 - 16 = 284; labelY = 284 - 35 = 249
-        Assert.Equal("249", tagNode.SelectSingleNode("StartY")!.InnerText);
+        // EffectiveY = 300 - 16 = 284; labelY = 284 - 40 = 244
+        Assert.Equal("244", tagNode.SelectSingleNode("StartY")!.InnerText);
+        // tagWidth = Math.Max(80, 5 * 12) = 80; labelX = 300 - 80 / 2 = 260
+        Assert.Equal("260", tagNode.SelectSingleNode("StartX")!.InnerText);
+        Assert.Equal("80", tagNode.SelectSingleNode("Width")!.InnerText);
+        Assert.Equal("28", tagNode.SelectSingleNode("Height")!.InnerText);
     }
 }

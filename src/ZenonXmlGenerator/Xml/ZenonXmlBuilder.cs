@@ -167,15 +167,17 @@ public sealed class ZenonXmlBuilder
                 int symTop = sym.DeviceType == DeviceType.Transformer
                     ? (sym.CenterY ?? (sym.EffectiveY + sym.EffectiveHeight / 2)) - 44
                     : sym.EffectiveY;
-                int labelY  = symTop - XmlConstants.TagLabelYOffset;
-                int labelX  = centerX - (int)(XmlConstants.TagLabelFontSize * (sym.TagLabel!.Length + 1) * 0.3);
+                int labelY = symTop - XmlConstants.TagLabelYOffset;
+                int tagWidth = Math.Max(80, (sym.TagLabel?.Length ?? 1) * 12);
+                int labelX = centerX - tagWidth / 2;
 
                 var labelElem = new TextElement
                 {
                     Id       = sym.Id + "_TAG",
                     X        = labelX,
                     Y        = labelY,
-                    Text     = sym.TagLabel,
+                    Width    = tagWidth,
+                    Text     = sym.TagLabel!,
                     FontSize = XmlConstants.TagLabelFontSize,
                     Color    = XmlConstants.TagLabelColor,
                 };
