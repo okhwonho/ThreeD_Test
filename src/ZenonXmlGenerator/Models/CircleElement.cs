@@ -18,8 +18,8 @@ public sealed class CircleElement : TopologyElement
     /// <summary>반지름 (px).</summary>
     public int Radius { get; set; }
 
-    /// <summary>채움 색상 (#RRGGBB). 기본 심볼 녹색.</summary>
-    public string FillColor { get; set; } = Xml.XmlConstants.ColorSymbolFill;
+    /// <summary>채움 색상 (#RRGGBB). null이면 투명 원환.</summary>
+    public string? FillColor { get; set; }
 
     /// <summary>테두리 색상 (#RRGGBB).</summary>
     public string BorderColor { get; set; } = Xml.XmlConstants.ColorSymbolBorder;

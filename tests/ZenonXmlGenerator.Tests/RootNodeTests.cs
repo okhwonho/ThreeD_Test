@@ -1,17 +1,23 @@
 using System.IO;
-using System.Text;
 using System.Xml;
 using ZenonXmlGenerator;
 
 namespace ZenonXmlGenerator.Tests;
 
 /// <summary>
-/// 출력 XML의 계층 구조 및 루트/컨테이너 노드가 zenon 15 Ground Truth를 만족하는지 검증.
+/// zenon Screen XML의 루트 노드 계층 구조 및 메타데이터 검증.
 ///
-/// 정식 계층:
-///   Subject (ShortName / MainVersion)
-///     └ Apartment (ShortName / Version)
-///         └ Picture (ShortName) + 메타데이터
+/// 검증 대상 구조:
+/// &lt;Subject ShortName="zenOn(R) exported project" MainVersion="15000"&gt;
+///   &lt;Apartment ShortName="zenOn(R) pictures list" Version="15000"&gt;
+///     &lt;Picture ShortName="{ScreenName}"&gt;
+///       &lt;Title&gt;{ScreenName}&lt;/Title&gt;
+///       &lt;Template&gt;MAIN&lt;/Template&gt;
+///       &lt;Type&gt;0&lt;/Type&gt;
+///       &lt;SizeFromTemplate&gt;FALSE&lt;/SizeFromTemplate&gt;
+///       &lt;Width&gt;...&lt;/Width&gt;
+///       &lt;Height&gt;...&lt;/Height&gt;
+///       &lt;BackgroundColor&gt;1C1007&lt;/BackgroundColor&gt;
 /// </summary>
 public sealed class RootNodeTests
 {
@@ -26,45 +32,48 @@ public sealed class RootNodeTests
         return doc;
     }
 
-    // ─── Subject 검증 ────────────────────────────────────────────────────
+    // ─── Subject 노드 검증 ───────────────────────────────────────────────
 
     [Fact]
-    public void RootElement_IsSubject()
+    public void RootNode_IsSubject()
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
-        Assert.Equal("Subject", xml.DocumentElement!.LocalName);
+        Assert.Equal("Subject", xml.DocumentElement!.Name);
     }
 
     [Fact]
-    public void RootElement_HasCorrectShortName()
+    public void Subject_HasCorrectShortNameAttribute()
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
-        Assert.Equal("zenOn(R) exported project",
-            xml.DocumentElement!.GetAttribute("ShortName"));
+        var attr = xml.DocumentElement!.GetAttribute("ShortName");
+        Assert.Equal("zenOn(R) exported project", attr);
     }
 
     [Fact]
-    public void RootElement_HasMainVersion15000()
+    public void Subject_HasMainVersion15000()
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
-        Assert.Equal("15000", xml.DocumentElement!.GetAttribute("MainVersion"));
+        var attr = xml.DocumentElement!.GetAttribute("MainVersion");
+        Assert.Equal("15000", attr);
     }
 
-    // ─── Apartment 검증 ──────────────────────────────────────────────────
+    // ─── Apartment 노드 검증 ─────────────────────────────────────────────
 
     [Fact]
-    public void Apartment_Exists()
+    public void Subject_ContainsSingleApartmentNode()
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
-        var apt = xml.DocumentElement!.SelectSingleNode("Apartment");
+        var apartmentNodes = xml.DocumentElement!.SelectNodes("Apartment");
+        Assert.NotNull(apartmentNodes);
+        Assert.Equal(1, apartmentNodes.Count);
+    }
+
+    [Fact]
+    public void Apartment_HasCorrectShortNameAttribute()
+    {
+        var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
+        var apt = xml.DocumentElement!.SelectSingleNode("Apartment") as XmlElement;
         Assert.NotNull(apt);
-    }
-
-    [Fact]
-    public void Apartment_HasCorrectShortName()
-    {
-        var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
-        var apt = (XmlElement)xml.DocumentElement!.SelectSingleNode("Apartment")!;
         Assert.Equal("zenOn(R) pictures list", apt.GetAttribute("ShortName"));
     }
 
@@ -72,30 +81,33 @@ public sealed class RootNodeTests
     public void Apartment_HasVersion15000()
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
-        var apt = (XmlElement)xml.DocumentElement!.SelectSingleNode("Apartment")!;
+        var apt = xml.DocumentElement!.SelectSingleNode("Apartment") as XmlElement;
+        Assert.NotNull(apt);
         Assert.Equal("15000", apt.GetAttribute("Version"));
     }
 
-    // ─── Picture 검증 ────────────────────────────────────────────────────
+    // ─── Picture 노드 검증 ───────────────────────────────────────────────
 
     [Fact]
-    public void Picture_Exists()
+    public void Apartment_ContainsSinglePictureNode()
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
-        var pic = xml.DocumentElement!.SelectSingleNode("Apartment/Picture");
-        Assert.NotNull(pic);
+        var pictureNodes = xml.DocumentElement!.SelectNodes("Apartment/Picture");
+        Assert.NotNull(pictureNodes);
+        Assert.Equal(1, pictureNodes.Count);
     }
 
     [Fact]
-    public void Picture_HasCorrectShortName()
+    public void Picture_HasShortNameFromScreenName()
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
-        var pic = (XmlElement)xml.DocumentElement!.SelectSingleNode("Apartment/Picture")!;
-        Assert.Equal("Main_SLD", pic.GetAttribute("ShortName"));
+        var picture = xml.DocumentElement!.SelectSingleNode("Apartment/Picture") as XmlElement;
+        Assert.NotNull(picture);
+        Assert.Equal("Main_SLD", picture.GetAttribute("ShortName"));
     }
 
     [Fact]
-    public void Picture_HasTitleMetadata()
+    public void Picture_HasTitleMetadata_MatchingScreenName()
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
         var title = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Title")!.InnerText;
@@ -103,7 +115,7 @@ public sealed class RootNodeTests
     }
 
     [Fact]
-    public void Picture_HasTemplateMetadata()
+    public void Picture_HasTemplateMetadata_DefaultMain()
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
         var template = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Template")!.InnerText;
@@ -148,12 +160,11 @@ public sealed class RootNodeTests
     public void RectangleElement_OutputsTransparentAttributes()
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
-        // Elements_0 is CANVAS_BG, Elements_1 is the user rectangle (R001)
-        var rect = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_1");
+        var rect = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
         Assert.NotNull(rect);
         Assert.Equal("102", rect.Attributes!["TYPE"]!.Value);
-        Assert.Equal("0", rect.SelectSingleNode("FillPattern")!.InnerText);
         Assert.Equal("0", rect.SelectSingleNode("AlphaBackColor")!.InnerText);
+        Assert.Equal("TRUE", rect.SelectSingleNode("Transparent")!.InnerText);
         Assert.Equal("1", rect.SelectSingleNode("LineWidth")!.InnerText);
         Assert.Equal("5C6C75", rect.SelectSingleNode("LineColorEx")!.InnerText);
     }

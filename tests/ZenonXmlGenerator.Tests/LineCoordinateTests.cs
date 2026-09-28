@@ -13,8 +13,6 @@ namespace ZenonXmlGenerator.Tests;
 ///   StartY = Y1
 ///   Width  = X2 - X1 (부호 유지)
 ///   Height = Y2 - Y1 (부호 유지)
-/// Note: Elements_0은 항상 다크 캔버스 전체 배경(CANVAS_BG)이므로,
-/// 사용자 지정 요소들은 Elements_1부터 시작한다.
 /// </summary>
 public sealed class LineCoordinateTests
 {
@@ -73,8 +71,7 @@ public sealed class LineCoordinateTests
     {
         var line = new LineElement { Id = "L1", X1 = 100, Y1 = 350, X2 = 100, Y2 = 200 };
         var xml  = BuildFromElements([line]);
-        // Elements_0 is CANVAS_BG, Elements_1 is the line
-        var ele  = GetElement(xml, 1);
+        var ele  = GetElement(xml, 0);
 
         Assert.Equal("101",  ele.GetAttribute("TYPE"));
         Assert.Equal("100",  ele.SelectSingleNode("StartX")!.InnerText);
@@ -88,7 +85,7 @@ public sealed class LineCoordinateTests
     {
         var line = new LineElement { Id = "L2", X1 = 50, Y1 = 100, X2 = 300, Y2 = 100 };
         var xml  = BuildFromElements([line]);
-        var ele  = GetElement(xml, 1);
+        var ele  = GetElement(xml, 0);
 
         Assert.Equal("101", ele.GetAttribute("TYPE"));
         Assert.Equal("50",  ele.SelectSingleNode("StartX")!.InnerText);
@@ -101,20 +98,19 @@ public sealed class LineCoordinateTests
     public void Xml_DiagonalLine_SplitIntoTwoOrthogonalSegments()
     {
         // 대각선 (100,100) → (300,300) 은 OrthogonalRouter에 의해 2개의 직교선으로 분할.
-        // Elements_0: CANVAS_BG
-        // Elements_1: 수평 세그먼트 (100,100) → (300,100) Width=200, Height=0
-        // Elements_2: 수직 세그먼트 (300,100) → (300,300) Width=0, Height=200
+        // Elements_0: 수평 세그먼트 (100,100) → (300,100) Width=200, Height=0
+        // Elements_1: 수직 세그먼트 (300,100) → (300,300) Width=0, Height=200
         var line = new LineElement { Id = "L3", X1 = 100, Y1 = 100, X2 = 300, Y2 = 300 };
         var xml  = BuildFromElements([line]);
 
-        var seg1 = GetElement(xml, 1);
+        var seg1 = GetElement(xml, 0);
         Assert.Equal("101", seg1.GetAttribute("TYPE"));
         Assert.Equal("100", seg1.SelectSingleNode("StartX")!.InnerText);
         Assert.Equal("100", seg1.SelectSingleNode("StartY")!.InnerText);
         Assert.Equal("200", seg1.SelectSingleNode("Width")!.InnerText);
         Assert.Equal("0",   seg1.SelectSingleNode("Height")!.InnerText);
 
-        var seg2 = GetElement(xml, 2);
+        var seg2 = GetElement(xml, 1);
         Assert.Equal("101", seg2.GetAttribute("TYPE"));
         Assert.Equal("300", seg2.SelectSingleNode("StartX")!.InnerText);
         Assert.Equal("100", seg2.SelectSingleNode("StartY")!.InnerText);
@@ -129,9 +125,9 @@ public sealed class LineCoordinateTests
     {
         var line = new LineElement { Id = "L4", X1 = 0, Y1 = 0, X2 = 10, Y2 = 0 };
         var xml  = BuildFromElements([line]);
-        var ele  = GetElement(xml, 1);
+        var ele  = GetElement(xml, 0);
 
-        Assert.Equal("Elements_1", ele.Name);
+        Assert.Equal("Elements_0", ele.Name);
     }
 
     [Fact]
@@ -139,7 +135,7 @@ public sealed class LineCoordinateTests
     {
         var line = new LineElement { Id = "L5", X1 = 0, Y1 = 0, X2 = 10, Y2 = 0 };
         var xml  = BuildFromElements([line]);
-        var ele  = GetElement(xml, 1);
+        var ele  = GetElement(xml, 0);
 
         Assert.Equal("zenOn(R) embedded object", ele.GetAttribute("NODE"));
     }

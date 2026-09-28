@@ -39,19 +39,14 @@ public sealed class SldTopologyTests
     }
 
     [Fact]
-    public void CanvasBackground_Elements0_IsSolidDarkNavy()
+    public void Picture_BackgroundColor_IsDarkNavy()
     {
         var gen = new ZenonXmlGenerator();
         var bytes = gen.GenerateFromJson(SampleSldJson);
         var xml = LoadXml(bytes);
 
-        // Elements_0 should be the full canvas dark background
-        var bg = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
-        Assert.NotNull(bg);
-        Assert.Equal("102", bg.Attributes!["TYPE"]!.Value);
-        Assert.Equal("1",   bg.SelectSingleNode("FillPattern")!.InnerText);
-        Assert.Equal("100", bg.SelectSingleNode("AlphaBackColor")!.InnerText);
-        Assert.Equal("0",   bg.SelectSingleNode("LineWidth")!.InnerText);
+        var bg = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/BackgroundColor")!.InnerText;
+        Assert.Equal("1C1007", bg);
     }
 
     [Fact]
@@ -75,11 +70,11 @@ public sealed class SldTopologyTests
         var bytes = gen.GenerateFromJson(SampleSldJson);
         var xml = LoadXml(bytes);
 
-        // CB11 is rendered as a green rectangle (TYPE=102, FillPattern=1, Width=32).
+        // CB11 is rendered as a green rectangle (TYPE=102, Transparent=FALSE, AlphaBackColor=255, Width=32).
         var cbBodies = xml.DocumentElement!.SelectNodes(
-            "Apartment/Picture/*[@TYPE='102' and FillPattern[text()='1'] and Width[text()='32']]");
+            "Apartment/Picture/*[@TYPE='102' and Transparent[text()='FALSE'] and Width[text()='32']]");
         Assert.NotNull(cbBodies);
-        Assert.True(cbBodies.Count > 0, "Expected at least one CB body rectangle (FillPattern=1, Width=32, TYPE=102).");
+        Assert.True(cbBodies.Count > 0, "Expected at least one CB body rectangle (Transparent=FALSE, Width=32, TYPE=102).");
     }
 
     [Fact]
@@ -89,11 +84,11 @@ public sealed class SldTopologyTests
         var bytes = gen.GenerateFromJson(SampleSldJson);
         var xml = LoadXml(bytes);
 
-        // DS elements → TYPE=102, FillPattern=0 (hollow), Width=24
+        // DS elements → TYPE=102, Transparent=TRUE, AlphaBackColor=0, Width=24
         var dsRects = xml.DocumentElement!.SelectNodes(
-            "Apartment/Picture/*[@TYPE='102' and FillPattern[text()='0'] and Width[text()='24']]");
+            "Apartment/Picture/*[@TYPE='102' and Transparent[text()='TRUE'] and Width[text()='24']]");
         Assert.NotNull(dsRects);
-        Assert.True(dsRects.Count > 0, "Expected at least one DS hollow rectangle (FillPattern=0, Width=24).");
+        Assert.True(dsRects.Count > 0, "Expected at least one DS hollow rectangle (Transparent=TRUE, Width=24).");
     }
 
     [Fact]

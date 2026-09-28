@@ -9,7 +9,7 @@ namespace ZenonXmlGenerator.Tests;
 
 /// <summary>
 /// Symbol 요소의 자체 완결형 벡터 렌더링(VectorSymbolRenderer) 검증.
-/// 2D 플랫 SCADA 규격 (FillPattern=1 Solid, FillPattern=0 Transparent) 검증.
+/// 2D 플랫 SCADA 규격 (Transparent=FALSE, AlphaBackColor=255 for solid / Transparent=TRUE, AlphaBackColor=0 for transparent) 검증.
 /// </summary>
 public sealed class SymbolBindingTests
 {
@@ -43,7 +43,7 @@ public sealed class SymbolBindingTests
         Assert.Equal(0, type16.Count);
     }
 
-    // ─── CircuitBreaker → 녹색 채움 사각형 (TYPE=102, FillPattern=1) ───
+    // ─── CircuitBreaker → 녹색 채움 사각형 (TYPE=102, Transparent=FALSE, Alpha=255) ───
 
     [Fact]
     public void Symbol_CircuitBreaker_RenderedAsFilledRectangle()
@@ -54,12 +54,11 @@ public sealed class SymbolBindingTests
             CenterX = 200, CenterY = 300, LibrarySymbolName = "CB_Open",
         };
         var xml     = BuildWithSymbol(sym);
-        // Elements_0 is CANVAS_BG, CB body is the 32x32 rectangle
-        var body    = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/*[@TYPE='102' and Width[text()='32']]");
+        var body    = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
         Assert.NotNull(body);
-
-        var fp = body.SelectSingleNode("FillPattern")?.InnerText;
-        Assert.Equal("1", fp);
+        Assert.Equal("102", body.Attributes!["TYPE"]!.Value);
+        Assert.Equal("FALSE", body.SelectSingleNode("Transparent")?.InnerText);
+        Assert.Equal("255", body.SelectSingleNode("AlphaBackColor")?.InnerText);
     }
 
     [Fact]
@@ -71,7 +70,7 @@ public sealed class SymbolBindingTests
             CenterX = 200, CenterY = 300, LibrarySymbolName = "CB_Open",
         };
         var xml  = BuildWithSymbol(sym);
-        var body = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/*[@TYPE='102' and Width[text()='32']]");
+        var body = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
         Assert.NotNull(body);
         Assert.Equal("32", body.SelectSingleNode("Width")!.InnerText);
         Assert.Equal("32", body.SelectSingleNode("Height")!.InnerText);
@@ -87,13 +86,13 @@ public sealed class SymbolBindingTests
             CenterX = 200, CenterY = 300, LibrarySymbolName = "CB_Open",
         };
         var xml  = BuildWithSymbol(sym);
-        var body = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/*[@TYPE='102' and Width[text()='32']]");
+        var body = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
         Assert.NotNull(body);
         Assert.Equal("184", body.SelectSingleNode("StartX")!.InnerText);
         Assert.Equal("284", body.SelectSingleNode("StartY")!.InnerText);
     }
 
-    // ─── Disconnector → 빈 사각형 테두리 (TYPE=102, FillPattern=0) ─────
+    // ─── Disconnector → 빈 사각형 테두리 (TYPE=102, Transparent=TRUE, Alpha=0) ─────
 
     [Fact]
     public void Symbol_Disconnector_RenderedAsHollowRectangle()
@@ -104,10 +103,11 @@ public sealed class SymbolBindingTests
             CenterX = 150, CenterY = 250, LibrarySymbolName = "DS_Open",
         };
         var xml  = BuildWithSymbol(sym);
-        // TYPE=102 element with Width=24 and FillPattern=0
-        var body = xml.DocumentElement!.SelectSingleNode(
-            "Apartment/Picture/*[@TYPE='102' and FillPattern[text()='0'] and Width[text()='24']]");
+        var body = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
         Assert.NotNull(body);
+        Assert.Equal("102", body.Attributes!["TYPE"]!.Value);
+        Assert.Equal("TRUE", body.SelectSingleNode("Transparent")?.InnerText);
+        Assert.Equal("0", body.SelectSingleNode("AlphaBackColor")?.InnerText);
         Assert.Equal("24", body.SelectSingleNode("Width")!.InnerText);
         Assert.Equal("24", body.SelectSingleNode("Height")!.InnerText);
     }
