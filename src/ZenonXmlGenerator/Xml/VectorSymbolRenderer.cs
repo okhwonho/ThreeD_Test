@@ -187,11 +187,13 @@ public static class VectorSymbolRenderer
             });
 
             // 권선 기호 텍스트 (Y/Y/Δ, 백색)
+            // EffectiveWidth=80, EffectiveHeight=28, HorizontalAlign=8 (Center)
+            // Bounding box center at (wcx, wcy) => X = wcx - 40, Y = wcy - 14
             elems.Add(new TextElement
             {
                 Id       = sym.Id + "_" + label + "_TXT",
-                X        = wcx - 5,
-                Y        = wcy - 7,
+                X        = wcx - 40,
+                Y        = wcy - 14,
                 Text     = label,
                 FontSize = 11,
                 Color    = XmlConstants.ColorTextPrimary, // #FFFFFF

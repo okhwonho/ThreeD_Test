@@ -158,6 +158,18 @@ public sealed class SymbolBindingTests
         var texts = xml.DocumentElement!.SelectNodes("Apartment/Picture/*[@TYPE='107']")!;
         // 3 winding labels (Y, Y, Δ)
         Assert.True(texts.Count >= 3, $"Expected >=3 winding text labels (Y/Y/Δ). Got {texts.Count}.");
+
+        // Winding texts centered at (wcx, wcy) with box (80x28) => (wcx - 40, wcy - 14)
+        // (478, 478) -> (438, 464); (522, 478) -> (482, 464); (500, 522) -> (460, 508)
+        var coords = texts.Cast<System.Xml.XmlNode>()
+            .Select(n => (X: int.Parse(n.SelectSingleNode("StartX")!.InnerText),
+                          Y: int.Parse(n.SelectSingleNode("StartY")!.InnerText),
+                          Text: n.SelectSingleNode("Text")!.InnerText))
+            .ToList();
+
+        Assert.Contains(coords, c => c.Text == "Y" && c.X == 438 && c.Y == 464);
+        Assert.Contains(coords, c => c.Text == "Y" && c.X == 482 && c.Y == 464);
+        Assert.Contains(coords, c => c.Text == "Δ" && c.X == 460 && c.Y == 508);
     }
 
     // ─── SymbolElement 모델 속성 (VectorSymbolRenderer 무관) ──────────
@@ -211,8 +223,8 @@ public sealed class SymbolBindingTests
         Assert.Equal("107", tagNode.Attributes!["TYPE"]!.Value);
         Assert.Equal("#1 MAIN TR", tagNode.SelectSingleNode("Text")!.InnerText);
 
-        // symTop = CenterY(500) - 44 = 456; labelY = 456 - TagLabelYOffset(40) = 416
-        Assert.Equal("416", tagNode.SelectSingleNode("StartY")!.InnerText);
+        // symTop = CenterY(500) - 44 = 456; labelY = 456 - TagLabelYOffset(35) = 421
+        Assert.Equal("421", tagNode.SelectSingleNode("StartY")!.InnerText);
         // tagWidth = Math.Max(80, 10 * 12) = 120; labelX = 500 - 120 / 2 = 440
         Assert.Equal("440", tagNode.SelectSingleNode("StartX")!.InnerText);
         Assert.Equal("120", tagNode.SelectSingleNode("Width")!.InnerText);
@@ -236,8 +248,8 @@ public sealed class SymbolBindingTests
         Assert.Equal("107", tagNode.Attributes!["TYPE"]!.Value);
         Assert.Equal("CB_52", tagNode.SelectSingleNode("Text")!.InnerText);
 
-        // EffectiveY = 300 - 16 = 284; labelY = 284 - 40 = 244
-        Assert.Equal("244", tagNode.SelectSingleNode("StartY")!.InnerText);
+        // EffectiveY = 300 - 16 = 284; labelY = 284 - 35 = 249
+        Assert.Equal("249", tagNode.SelectSingleNode("StartY")!.InnerText);
         // tagWidth = Math.Max(80, 5 * 12) = 80; labelX = 300 - 80 / 2 = 260
         Assert.Equal("260", tagNode.SelectSingleNode("StartX")!.InnerText);
         Assert.Equal("80", tagNode.SelectSingleNode("Width")!.InnerText);

@@ -293,7 +293,7 @@
       "type": "text",
       "id": "TXT_DMR_LABEL",
       "x": 1600,
-      "y": 680,
+      "y": 681,
       "text": "DMR  Neutral / Metallic Return",
       "fontSize": 12,
       "color": "#00B0FF"

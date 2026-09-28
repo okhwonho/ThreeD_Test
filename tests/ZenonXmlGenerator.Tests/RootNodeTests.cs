@@ -180,6 +180,8 @@ public sealed class RootNodeTests
         Assert.Equal("TRUE", text.SelectSingleNode("Transparent")!.InnerText);
         Assert.Equal("0", text.SelectSingleNode("AlphaBackColor")!.InnerText);
         Assert.Equal("0", text.SelectSingleNode("BackColor")!.InnerText);
+        Assert.Equal("0", text.SelectSingleNode("FillPattern")!.InnerText);
+        Assert.Equal("0", text.SelectSingleNode("LineWidth")!.InnerText);
         Assert.NotNull(text.SelectSingleNode("FillStyle"));
         Assert.Equal("28", text.SelectSingleNode("Height")!.InnerText);
         Assert.Equal("96", text.SelectSingleNode("Width")!.InnerText);

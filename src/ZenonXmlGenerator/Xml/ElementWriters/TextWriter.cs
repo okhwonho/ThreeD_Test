@@ -63,10 +63,11 @@ public sealed class TextWriter : IElementWriter
         writer.WriteStartElement("FillStyle");
         writer.WriteEndElement(); // <FillStyle/>
 
-        // 배경은 완전 투명: Transparent=TRUE, AlphaBackColor=0, BackColor=0
-        writer.WriteElementString("Transparent",    "TRUE");
+        writer.WriteElementString("FillPattern",    "0");
         writer.WriteElementString("AlphaBackColor", "0");
         writer.WriteElementString("BackColor",      "0");
+        writer.WriteElementString("Transparent",    "TRUE");
+        writer.WriteElementString("LineWidth",      "0");
 
         writer.WriteEndElement(); // Elements_n
     }
