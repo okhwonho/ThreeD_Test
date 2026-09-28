@@ -193,4 +193,46 @@ public sealed class SymbolBindingTests
         Assert.Equal(24, ds.EffectiveWidth);
         Assert.Equal(60, tr.EffectiveWidth);
     }
+
+    [Fact]
+    public void InjectTagLabels_Transformer_AccountsForTopBoundaryMinus44()
+    {
+        var sym = new SymbolElement
+        {
+            Id = "TR1",
+            DeviceType = DeviceType.Transformer,
+            CenterX = 500,
+            CenterY = 500,
+            TagLabel = "#1 MAIN TR",
+        };
+        var xml = BuildWithSymbol(sym);
+        var tagNode = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
+        Assert.NotNull(tagNode);
+        Assert.Equal("107", tagNode.Attributes!["TYPE"]!.Value);
+        Assert.Equal("#1 MAIN TR", tagNode.SelectSingleNode("Text")!.InnerText);
+
+        // symTop = CenterY(500) - 44 = 456; labelY = 456 - TagLabelYOffset(35) = 421
+        Assert.Equal("421", tagNode.SelectSingleNode("StartY")!.InnerText);
+    }
+
+    [Fact]
+    public void InjectTagLabels_StandardSymbol_UsesEffectiveYMinusOffset()
+    {
+        var sym = new SymbolElement
+        {
+            Id = "CB1",
+            DeviceType = DeviceType.CircuitBreaker,
+            CenterX = 300,
+            CenterY = 300,
+            TagLabel = "CB_52",
+        };
+        var xml = BuildWithSymbol(sym);
+        var tagNode = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
+        Assert.NotNull(tagNode);
+        Assert.Equal("107", tagNode.Attributes!["TYPE"]!.Value);
+        Assert.Equal("CB_52", tagNode.SelectSingleNode("Text")!.InnerText);
+
+        // EffectiveY = 300 - 16 = 284; labelY = 284 - 35 = 249
+        Assert.Equal("249", tagNode.SelectSingleNode("StartY")!.InnerText);
+    }
 }

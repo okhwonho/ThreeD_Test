@@ -1,6 +1,7 @@
 using System.IO;
 using System.Xml;
 using ZenonXmlGenerator;
+using ZenonXmlGenerator.Models;
 
 namespace ZenonXmlGenerator.Tests;
 
@@ -167,5 +168,38 @@ public sealed class RootNodeTests
         Assert.Equal("0", rect.SelectSingleNode("FillPattern")!.InnerText);
         Assert.Equal("1", rect.SelectSingleNode("LineWidth")!.InnerText);
         Assert.Equal("5C6C75", rect.SelectSingleNode("LineColorEx")!.InnerText);
+    }
+
+    [Fact]
+    public void TextElement_OutputsTransparentAndZeroBackColor()
+    {
+        var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
+        // Elements_4 is T001
+        var text = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/*[@TYPE='107']");
+        Assert.NotNull(text);
+        Assert.Equal("TRUE", text.SelectSingleNode("Transparent")!.InnerText);
+        Assert.Equal("0", text.SelectSingleNode("AlphaBackColor")!.InnerText);
+        Assert.Equal("0", text.SelectSingleNode("BackColor")!.InnerText);
+        Assert.NotNull(text.SelectSingleNode("FillStyle"));
+        Assert.Equal("24", text.SelectSingleNode("Height")!.InnerText);
+    }
+
+    [Fact]
+    public void TextElement_EffectiveHeight_GuaranteesAtLeast24PxPerLine()
+    {
+        var single = new TextElement { Text = "Line", FontSize = 12 };
+        Assert.Equal(24, single.EffectiveHeight);
+
+        var multi = new TextElement { Text = "Line1\nLine2\nLine3", FontSize = 12 };
+        Assert.Equal(72, multi.EffectiveHeight);
+
+        var smallExplicit = new TextElement { Text = "Line", FontSize = 12, Height = 10 };
+        Assert.Equal(24, smallExplicit.EffectiveHeight);
+
+        var largeExplicit = new TextElement { Text = "Line", FontSize = 12, Height = 50 };
+        Assert.Equal(50, largeExplicit.EffectiveHeight);
+
+        var largeFont = new TextElement { Text = "Line", FontSize = 20 };
+        Assert.Equal(32, largeFont.EffectiveHeight);
     }
 }

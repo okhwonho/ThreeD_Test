@@ -22,8 +22,9 @@ namespace ZenonXmlGenerator.Xml.ElementWriters;
 ///   &lt;VerticalAlign&gt;0&lt;/VerticalAlign&gt;
 ///   &lt;Wordbreak&gt;TRUE&lt;/Wordbreak&gt;
 ///   &lt;FillStyle/&gt;
-///   &lt;BackColor&gt;C0C0C0&lt;/BackColor&gt;
+///   &lt;Transparent&gt;TRUE&lt;/Transparent&gt;
 ///   &lt;AlphaBackColor&gt;0&lt;/AlphaBackColor&gt;
+///   &lt;BackColor&gt;0&lt;/BackColor&gt;
 /// &lt;/Elements_n&gt;
 /// </code>
 /// </summary>
@@ -62,9 +63,10 @@ public sealed class TextWriter : IElementWriter
         writer.WriteStartElement("FillStyle");
         writer.WriteEndElement(); // <FillStyle/>
 
-        // 배경은 투명: BackColor=C0C0C0, AlphaBackColor=0
-        writer.WriteElementString("BackColor",       "C0C0C0");
-        writer.WriteElementString("AlphaBackColor",  "0");
+        // 배경은 완전 투명: Transparent=TRUE, AlphaBackColor=0, BackColor=0
+        writer.WriteElementString("Transparent",    "TRUE");
+        writer.WriteElementString("AlphaBackColor", "0");
+        writer.WriteElementString("BackColor",      "0");
 
         writer.WriteEndElement(); // Elements_n
     }

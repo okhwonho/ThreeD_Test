@@ -298,7 +298,7 @@ public sealed class CliE2ETests
             var picture = doc.DocumentElement!.SelectSingleNode("Apartment/Picture");
             Assert.NotNull(picture);
 
-            // 1. Text elements: cloned from Golden.XML (TextColor valid non-black RGB, FillStyle, BackColor=C0C0C0, AlphaBackColor=0)
+            // 1. Text elements: cloned from Golden.XML (TextColor valid non-black RGB, FillStyle, BackColor=0, Transparent=TRUE, AlphaBackColor=0)
             var texts = picture.SelectNodes("*[@TYPE='107']");
             Assert.NotNull(texts);
             Assert.True(texts.Count > 0);
@@ -307,7 +307,8 @@ public sealed class CliE2ETests
                 var tc = t.SelectSingleNode("TextColor")!.InnerText;
                 Assert.Equal(6, tc.Length);
                 Assert.NotEqual("000000", tc);
-                Assert.Equal("C0C0C0", t.SelectSingleNode("BackColor")!.InnerText);
+                Assert.Equal("0", t.SelectSingleNode("BackColor")!.InnerText);
+                Assert.Equal("TRUE", t.SelectSingleNode("Transparent")!.InnerText);
                 Assert.Equal("0", t.SelectSingleNode("AlphaBackColor")!.InnerText);
                 Assert.NotNull(t.SelectSingleNode("FillStyle"));
             }

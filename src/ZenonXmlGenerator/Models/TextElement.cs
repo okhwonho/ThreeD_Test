@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json.Serialization;
 
 namespace ZenonXmlGenerator.Models;
@@ -30,7 +31,16 @@ public sealed class TextElement : TopologyElement
 
     // --- 추정 치수 ---
     [JsonIgnore]
-    public int EffectiveWidth  => Width  > 0 ? Width  : (int)(FontSize * (Text.Length + 1) * 0.6);
+    public int EffectiveWidth => Width > 0 ? Width : (int)(FontSize * (Text.Length + 1) * 0.6);
+
     [JsonIgnore]
-    public int EffectiveHeight => Height > 0 ? Height : (int)(FontSize * 1.5);
+    public int EffectiveHeight
+    {
+        get
+        {
+            int lines = string.IsNullOrEmpty(Text) ? 1 : Math.Max(1, Text.Split('\n').Length);
+            int singleLine = Math.Max(FontSize + 12, 24);
+            return Height > 0 ? Math.Max(Height, 24 * lines) : singleLine * lines;
+        }
+    }
 }

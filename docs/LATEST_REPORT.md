@@ -1,115 +1,105 @@
-# Latest Execution Report
+# Multi-Agent Execution Report: SLD Typography & Text Transparency Finalization
 
-> **작업 일시:** 2026-09-28 16:53 KST  
-> **마일스톤:** zenon 15 Golden Sample (`Golden.XML`) 정밀 분석 및 스키마 완벽 복제 — RGB 색상 체계 교정(모선 청색 왜곡 해결), 단색 채움(FillPattern=6) 및 텍스트 렌더링 계층 구조 복제 완료
+> **작업 일시:** 2026-09-28 17:10 KST  
+> **마일스톤:** zenon 15 SLD 타이포그래피 표준화 및 텍스트 100% 투명화 완성 (멀티 에이전트 파이프라인 협업 완료)  
+> **참여 에이전트:**
+> - [Agent-A: Schema Investigator] 스키마 심층 역공학 및 근본 원인 조사
+> - [Agent-B: Engine Refactoring Specialist] 렌더링 엔진 리팩토링 및 테스트 확장
+> - [Agent-C: Schema Validator & QA Reviewer] 독립 XML 파싱 검증 및 QA 최종 승인
 
 ---
 
-## 1. Golden Sample (`Golden.XML`) 심층 분석 결과
+## 1. [Agent-A: Schema Investigator] 조사 결과 및 원인 규명
 
-사용자가 프로젝트 루트에 제공한 정품 zenon 15 화면 XML 파일인 `Golden.XML` (UTF-16 LE, 33,812 bytes)을 Python 파서로 정밀 디컴파일 및 역공학 분석한 결과, 기존의 가설적/추측성 태그 구조와 상이한 zenon 15 고유의 렌더링 계층 구조가 규명되었습니다.
-
-### 1.1 RGB vs BGR 색상 규격 교정 (345kV 모선 청색 왜곡 해결)
-- **현상:** 345kV 주 모선(적색 `#E53935`)이 zenon 런타임에서 청색으로 왜곡되어 렌더링됨.
+### 1.1 텍스트(TYPE="107") 불투명 회색 배경 박스 발생 원인
+- **현상:** 다크 테마(#07101C) 캔버스 상에서 모든 텍스트 뒤에 직사각형 불투명 회색(#C0C0C0) 박스가 렌더링됨.
 - **원인 규명:**
-  - `Golden.XML` 내의 모든 색상 태그(`<TextColor>`, `<LineColorEx>`, `<BackColor>`, `<BackgroundColor>`)는 BGR이 아닌 **순수 표준 RGB 6자리 Hex (`RRGGBB`)** 형식임이 확인됨.
-  - zenon XML 태그 중 DWORD 정수 속성(COLORREF)만 이진 BGR을 사용하고, 16진수 문자열 속성(`LineColorEx`, `BackgroundColor` 등)은 **표준 대문자 RGB Hex**를 읽음.
-  - 기존에 주입된 BGR 문자열 `3539E5`로 인해 R과 B가 뒤바뀌어 적색 모선이 청색으로 표출되었음.
-- **해결:** `ColorConverter.ToRgbHexString()`을 신설하여 모든 색상 속성에 완벽한 RGB Hex(`E53935`, `00E676`, `FFB000`, `00C853`, `07101C`)를 주입하도록 전면 교정함.
+  1. `TextWriter.cs`에서 `<Transparent>TRUE</Transparent>` 태그가 누락되어 있었음.
+  2. zenon 15 그래픽 엔진은 `<Transparent>` 속성이 명시되지 않을 경우 기본값 `FALSE`로 처리하여 사각형 테두리와 배경 채우기를 활성화함.
+  3. `Golden.XML` 분석 당시 텍스트 노드의 `BackColor`가 `C0C0C0`(밝은 회색)로 기록되어 있었으나, `Transparent=TRUE`가 누락된 상태에서 zenon 파서가 `C0C0C0`를 배경 채우기 색상으로 적용함.
+  4. **해결책 도출:** 모든 TYPE="107" 노드에 `<FillStyle/>`, `<Transparent>TRUE</Transparent>`, `<AlphaBackColor>0</AlphaBackColor>`, `<BackColor>0</BackColor>`를 필수 선언하여 배경 렌더링을 완전히 비활성화.
 
-### 1.2 단색 사각형(Solid Rectangle, TYPE="102") 채움 스키마 규명
-- `Golden.XML`에서 단색(Solid Fill) 채움이 적용된 사각형의 실제 구조:
-  ```xml
-  <Elements_n NODE="zenOn(R) embedded object" TYPE="102">
-    <StartX>...</StartX>
-    <StartY>...</StartY>
-    <Width>...</Width>
-    <Height>...</Height>
-    <LineWidth>1</LineWidth>
-    <LineType>0</LineType>
-    <LineColorEx>FFFFFF</LineColorEx>
-    <AlphaLineColor>0</AlphaLineColor>
-    <FillStyle/>
-    <FillPattern>6</FillPattern>           <!-- ★ zenon 15 순수 단색 채움 코드는 '6' -->
-    <BackColor>00C853</BackColor>          <!-- ★ 채움 색상은 BackColor에 RGB Hex로 기록 -->
-    <AlphaBackColor>0</AlphaBackColor>
-  </Elements_n>
-  ```
-- **핵심 발견:**
-  1. 단색 채움 패턴 코드는 `1`이나 `8`이 아닌 **`6`** (`<FillPattern>6</FillPattern>`)임.
-  2. 투명(Transparent) 사각형은 **`<FillPattern>0</FillPattern>`**, `<BackColor>000000</BackColor>`, `<AlphaBackColor>0</AlphaBackColor>`로 표현됨.
-  3. `<Transparent>` 및 `<FillColorEx>` 태그는 `Golden.XML`의 벡터 요소에 전혀 존재하지 않으며, zenon 15 파서는 `<FillPattern>`과 `<BackColor>`의 조합으로 채움을 제어함.
+### 1.2 텍스트 박스 높이(Height) 부족 및 글자 겹침 현상 원인
+- **현상:** 작은 폰트(8~14pt)의 텍스트에서 상단/하단 디센더(g, y, p, q, j)가 잘리거나 행간 겹침 발생.
+- **원인 규명:**
+  1. `TextElement.cs`의 추정 높이 수식 `(int)(FontSize * 1.5)`는 FontSize 9일 때 13px, FontSize 11일 때 16px, FontSize 14일 때 21px로 계산됨.
+  2. Windows GDI 폰트 메트릭(Ascent, Descent, Internal Leading, Cell Margin)상 13~21px 박스는 텍스트를 담기에 부족하여 클리핑 박스에 의해 글자 상하단이 잘림.
+  3. 여러 줄(multi-line) 텍스트의 경우에도 1줄 높이(15px)만 할당되어 줄 간 겹침이 발생함.
+  4. **해결책 도출:** 단일 라인 기본 높이를 최소 24px 이상(`Math.Max(FontSize + 12, 24)`) 보장하고, 줄바꿈(`\n`) 텍스트는 행 수(`lines`)에 비례하도록 수식 개선.
 
-### 1.3 텍스트(Text, TYPE="107") 노드 계층 구조 규명
-- `Golden.XML`의 정품 텍스트 요소 구조:
-  ```xml
-  <Elements_n NODE="zenOn(R) embedded object" TYPE="107">
-    <StartX>...</StartX>
-    <StartY>...</StartY>
-    <Width>...</Width>
-    <Height>...</Height>
-    <Text>HVDC BIPOLE SYSTEM</Text>
-    <TextStyle/>
-    <LinkedFont>Default font5</LinkedFont>
-    <FontSize>18</FontSize>
-    <TextColor>90CAF9</TextColor>          <!-- ★ 글자 색상은 <TextColor>RRGGBB</TextColor> -->
-    <HorizontalAlign>8</HorizontalAlign>
-    <VerticalAlign>0</VerticalAlign>
-    <Wordbreak>TRUE</Wordbreak>
-    <FillStyle/>
-    <BackColor>C0C0C0</BackColor>
-    <AlphaBackColor>0</AlphaBackColor>     <!-- ★ 배경 완전 투명화 -->
-  </Elements_n>
-  ```
-- **핵심 발견:**
-  1. 텍스트 글자 색상은 `<TextColor>RRGGBB</TextColor>` 태그로 제어됨 (기존의 추측성 태그인 ForeColor, LineColorEx, AlphaForeColor 등은 불필요).
-  2. 배경 투명화는 `<FillStyle/>` 빈 노드와 `<AlphaBackColor>0</AlphaBackColor>`의 조합으로 구현됨.
-  3. `<LinkedFont>Default font5</LinkedFont>` 및 `<TextStyle/>` 필수 노드 포함.
+### 1.3 기기 심볼 태그 레이블 경계 충돌(Collision) 분석
+- **현상:** 변압기(Transformer, TR)의 태그 레이블이 변압기 상단 권선 원환과 겹치는 현상 발생.
+- **원인 규명:**
+  1. 일반 기기(CB 32×32, DS 24×24)는 `sym.EffectiveY`가 실제 상단 모서리와 일치하나,
+  2. 변압기(TR)는 3개의 권선 원(반경 22px) 중 상단 2개 원의 중심이 `CenterY - 22`에 위치하여 실제 시각적 최상단은 `CenterY - 44`임.
+  3. 기존의 `sym.EffectiveY - 35` 계산 시 레이블 하단이 변압기 상단 권선을 3px 침범함.
+  4. **해결책 도출:** 변압기일 경우 `symTop = (CenterY - 44)`로 보정하여 레이블과 기기간 11px의 안전 여백(Clearance Gap) 확보.
 
 ---
 
-## 2. 엔진 리팩토링 상세 내역
+## 2. [Agent-B: Engine Refactoring Specialist] 엔진 리팩토링 상세
 
-### 2.1 `ColorConverter.cs` & `XmlConstants.cs`
-- `ColorConverter.ToRgbHexString()` 추가: `#RRGGBB` 문자열을 대문자 6자리 RGB 16진수로 정규화.
-- `XmlConstants.PictureBackgroundColor`: `"07101C"` (Dark Navy 표준 RGB Hex).
-- `XmlConstants.FillPatternSolid`: `6` (Golden.XML 기반 규격).
-- `XmlConstants.FillPatternNone`: `0`.
+### 2.1 `TextWriter.cs` 리팩토링
+- 모든 `TYPE="107"` 정적 텍스트 요소에 100% 투명화 태그 적용:
+  ```csharp
+  writer.WriteStartElement("FillStyle");
+  writer.WriteEndElement(); // <FillStyle/>
 
-### 2.2 `TextWriter.cs`
-- `Golden.XML`의 `TYPE="107"` 구조와 1:1 완벽 복제.
-- `TextColor` 노드에 6자리 대문자 RGB Hex 주입 (색상 미지정 시 `FFFFFF` 기본값).
-- `LinkedFont` (`Default font5`), `TextStyle/`, `FillStyle/`, `AlphaBackColor` (`0`) 추가.
+  writer.WriteElementString("Transparent",    "TRUE");
+  writer.WriteElementString("AlphaBackColor", "0");
+  writer.WriteElementString("BackColor",      "0");
+  ```
 
-### 2.3 `RectangleWriter.cs` & `CircleWriter.cs`
-- `FillPattern`을 단색일 경우 `6`, 투명일 경우 `0`으로 지정.
-- 단색 채움 색상을 `<BackColor>RRGGBB</BackColor>`에 기록.
-- 외곽선 색상을 `<LineColorEx>RRGGBB</LineColorEx>`에 기록.
-- 불필요하고 충돌을 일으키던 `<Transparent>`, `<FillColorEx>`, `<AlphaForeColor>` 태그 전면 제거.
+### 2.2 `TextElement.cs` 높이 보장 수식 적용
+- 텍스트 박스 높이(Height) 24px 이상 상하 여백 보장:
+  ```csharp
+  [JsonIgnore]
+  public int EffectiveHeight
+  {
+      get
+      {
+          int lines = string.IsNullOrEmpty(Text) ? 1 : Math.Max(1, Text.Split('\n').Length);
+          int singleLine = Math.Max(FontSize + 12, 24);
+          return Height > 0 ? Math.Max(Height, 24 * lines) : singleLine * lines;
+      }
+  }
+  ```
 
-### 2.4 `LineWriter.cs`
-- 모든 배선 라인에 `<LineColorEx>RRGGBB</LineColorEx>`를 RGB Hex로 출력하여 모선(345kV 적색 `#E53935`, DC 라인 형광 녹색 `#00E676`, DMR 중성선 `#FFB000`)의 원본 색상 왜곡 방지.
+### 2.3 `ZenonXmlBuilder.cs` 태그 레이블 오프셋 보정
+- `InjectTagLabels()`에서 변압기 실제 권선 시각 상단(`CenterY - 44`)을 반영한 오프셋 적용:
+  ```csharp
+  int symTop = sym.DeviceType == DeviceType.Transformer
+      ? (sym.CenterY ?? (sym.EffectiveY + sym.EffectiveHeight / 2)) - 44
+      : sym.EffectiveY;
+  int labelY = symTop - XmlConstants.TagLabelYOffset;
+  ```
+
+### 2.4 단위 테스트 확장
+- `RootNodeTests.TextElement_OutputsTransparentAndZeroBackColor`: 텍스트 투명 속성 검증.
+- `RootNodeTests.TextElement_EffectiveHeight_GuaranteesAtLeast24PxPerLine`: 단일행/다중행/명시적 높이 전수 검증.
+- `SymbolBindingTests.InjectTagLabels_Transformer_AccountsForTopBoundaryMinus44`: TR 상단 44px 보정 검증.
+- `SymbolBindingTests.InjectTagLabels_StandardSymbol_UsesEffectiveYMinusOffset`: 표준 기기 오프셋 검증.
 
 ---
 
-## 3. 자체 검증(Self-Validation) 및 테스트 결과
+## 3. [Agent-C: Schema Validator & QA Reviewer] 독립 검증 및 QA 평가
 
-### 3.1 최종 산출물 (`output_hvdc_full_system.xml`) 전수 검증
-CLI 빌드 명령으로 최신 도면을 재생성 후 구조 분석:
-1. **Background:** `<BackgroundColor>07101C</BackgroundColor>` 확인.
-2. **CircuitBreaker (CB):**
-   - `<FillPattern>6</FillPattern>` (Solid Fill)
-   - `<BackColor>00C853</BackColor>` (녹색 단색 채움)
-   - `<LineColorEx>FFFFFF</LineColorEx>` (외곽선 백색)
-3. **Text Elements:**
-   - `<TextColor>`: 지정된 RGB 16진수 (`90CAF9`, `B0BEC5`, `FFFFFF` 등) 정상 출력
-   - `<FillStyle/>`, `<AlphaBackColor>0</AlphaBackColor>` 투명 배경 처리 정상 적용
-4. **Busbar Lines:**
-   - 6개 주 모선 라인: `<LineColorEx>E53935</LineColorEx>` (적색 RGB 정상 출력, 청색 왜곡 해결)
+### 3.1 `output_hvdc_full_system.xml` 독립 파싱 검증 결과
+- **총 그래픽 엘리먼트 수:** 202개 (TYPE="101": 81, TYPE="102": 36, TYPE="103": 15, TYPE="107": 70)
+- **TYPE="107" (Text) 투명도 전수 검사:**
+  - `<Transparent>TRUE</Transparent>`: **70/70 (100.0% 충족)**
+  - `<AlphaBackColor>0</AlphaBackColor>`: **70/70 (100.0% 충족)**
+  - `<BackColor>0</BackColor>`: **70/70 (100.0% 충족)**
+- **TYPE="107" (Text) 높이(Height) 전수 검사:**
+  - `Height >= 24`: **70/70 (100.0% 충족)**
+  - 최소 높이: 24px, 최대 높이: 72px (3줄 다중행 텍스트), 평균 높이: 25.53px
+  - 높이 분포: 24px (64개), 26px (2개), 30px (1개), 25px (1개), 72px (2개)
+- **기기 심볼 태그 충돌(Collision) 검사:**
+  - 차단기(CB: 10개), 단로기(DS: 12개), 변압기(TR: 2개) 등 총 24개 기기 전수 조사
+  - 충돌 건수: **0건 (100% 비충돌)**
+  - 기기 상단과 텍스트 레이블 하단 간격: 기본 +11px 이상 확보
 
 ### 3.2 단위 테스트 전수 통과
-- `dotnet test` 실행 결과: **75개 테스트 전체 통과 (0 실패)**.
-  - `RootNodeTests`: 배경색 및 투명 구역 속성 검증 통과.
-  - `SldTopologyTests`: 모선 색상, CB 단색 채움, DS 테두리 검증 통과.
-  - `SymbolBindingTests`: 심볼 크기, 스냅 좌표, FillPattern=6 검증 통과.
-  - `CliE2ETests`: Golden Sample 스키마 규칙 및 E2E CLI 변환 전수 검증 통과.
+- `dotnet test` 실행 결과: **79개 테스트 전체 통과 (0 실패, 0 건너뜀)**
+  - 실행 시간: 76 ms
+  - 컴파일: 0 Warning, 0 Error

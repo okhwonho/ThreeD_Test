@@ -164,7 +164,10 @@ public sealed class ZenonXmlBuilder
             {
                 // 심볼 중심 X 계산
                 int centerX = sym.CenterX ?? (sym.EffectiveX + sym.EffectiveWidth / 2);
-                int labelY  = sym.EffectiveY - XmlConstants.TagLabelYOffset;
+                int symTop = sym.DeviceType == DeviceType.Transformer
+                    ? (sym.CenterY ?? (sym.EffectiveY + sym.EffectiveHeight / 2)) - 44
+                    : sym.EffectiveY;
+                int labelY  = symTop - XmlConstants.TagLabelYOffset;
                 int labelX  = centerX - (int)(XmlConstants.TagLabelFontSize * (sym.TagLabel!.Length + 1) * 0.3);
 
                 var labelElem = new TextElement
