@@ -43,7 +43,7 @@ public sealed class SymbolBindingTests
         Assert.Equal(0, type16.Count);
     }
 
-    // ─── CircuitBreaker → 녹색 채움 사각형 (TYPE=102, Transparent=FALSE, Alpha=255) ───
+    // ─── CircuitBreaker → 녹색 채움 사각형 (TYPE=102, FillPattern=6, BackColor=00C853) ───
 
     [Fact]
     public void Symbol_CircuitBreaker_RenderedAsFilledRectangle()
@@ -57,8 +57,9 @@ public sealed class SymbolBindingTests
         var body    = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
         Assert.NotNull(body);
         Assert.Equal("102", body.Attributes!["TYPE"]!.Value);
-        Assert.Equal("FALSE", body.SelectSingleNode("Transparent")?.InnerText);
-        Assert.Equal("255", body.SelectSingleNode("AlphaBackColor")?.InnerText);
+        Assert.Equal("6", body.SelectSingleNode("FillPattern")?.InnerText);
+        Assert.Equal("00C853", body.SelectSingleNode("BackColor")?.InnerText);
+        Assert.Equal("0", body.SelectSingleNode("AlphaBackColor")?.InnerText);
     }
 
     [Fact]
@@ -92,7 +93,7 @@ public sealed class SymbolBindingTests
         Assert.Equal("284", body.SelectSingleNode("StartY")!.InnerText);
     }
 
-    // ─── Disconnector → 빈 사각형 테두리 (TYPE=102, Transparent=TRUE, Alpha=0) ─────
+    // ─── Disconnector → 빈 사각형 테두리 (TYPE=102, FillPattern=0, Alpha=0) ─────
 
     [Fact]
     public void Symbol_Disconnector_RenderedAsHollowRectangle()
@@ -106,7 +107,7 @@ public sealed class SymbolBindingTests
         var body = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
         Assert.NotNull(body);
         Assert.Equal("102", body.Attributes!["TYPE"]!.Value);
-        Assert.Equal("TRUE", body.SelectSingleNode("Transparent")?.InnerText);
+        Assert.Equal("0", body.SelectSingleNode("FillPattern")?.InnerText);
         Assert.Equal("0", body.SelectSingleNode("AlphaBackColor")?.InnerText);
         Assert.Equal("24", body.SelectSingleNode("Width")!.InnerText);
         Assert.Equal("24", body.SelectSingleNode("Height")!.InnerText);

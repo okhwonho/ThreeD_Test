@@ -6,11 +6,11 @@ namespace ZenonXmlGenerator.Xml.ElementWriters;
 /// <summary>
 /// 원(Ellipse/Circle) 요소를 zenon XML로 출력한다. TYPE="103"
 ///
-/// zenon 15 Strict XML 규격:
-/// - 투명 원환 (Transformer 권선 등):
-///   FillPattern="0", Transparent="TRUE", BackColor="0", AlphaBackColor="0", LineColorEx={BGR Hex}
-/// - 단색 채움 (EarthSwitch 녹색 원 등):
-///   FillPattern="1", Transparent="FALSE", BackColor/FillColor={COLORREF}, FillColorEx={BGR Hex}, AlphaBackColor="255", LineColorEx={BGR Hex}
+/// Golden.XML 정밀 분석 결과 복제 구조:
+/// - 단색 채움 원 (EarthSwitch 등):
+///   FillPattern="6", BackColor="RRGGBB", LineColorEx="RRGGBB", AlphaBackColor="0", FillStyle/
+/// - 투명 원환 (Transformer 등):
+///   FillPattern="0", BackColor="000000", LineColorEx="RRGGBB", AlphaBackColor="0", FillStyle/
 /// </summary>
 public sealed class CircleWriter : IElementWriter
 {
@@ -30,32 +30,30 @@ public sealed class CircleWriter : IElementWriter
         writer.WriteElementString("Width",           circle.Diameter.ToString());
         writer.WriteElementString("Height",          circle.Diameter.ToString());
         writer.WriteElementString("LineWidth",       circle.LineWidth.ToString());
+        writer.WriteElementString("LineType",        "0");
 
-        var borderRef = ColorConverter.ToColorRefString(circle.BorderColor);
-        var borderBgrHex = ColorConverter.ToBgrHexString(circle.BorderColor);
-        writer.WriteElementString("ForeColor",       borderRef);
-        writer.WriteElementString("LineColorEx",     borderBgrHex);
+        var borderRgbHex = ColorConverter.ToRgbHexString(circle.BorderColor);
+        writer.WriteElementString("LineColorEx",     borderRgbHex);
+        writer.WriteElementString("AlphaLineColor",  "0");
+
+        writer.WriteStartElement("FillStyle");
+        writer.WriteEndElement(); // <FillStyle/>
 
         bool isFilled = !string.IsNullOrWhiteSpace(circle.FillColor) && circle.FillColor != "transparent";
 
         if (isFilled)
         {
-            var fillRef = ColorConverter.ToColorRefString(circle.FillColor!);
-            var fillBgrHex = ColorConverter.ToBgrHexString(circle.FillColor!);
-
-            writer.WriteElementString("FillPattern",     "1");
-            writer.WriteElementString("Transparent",     "FALSE");
-            writer.WriteElementString("BackColor",       fillRef);
-            writer.WriteElementString("FillColor",       fillRef);
-            writer.WriteElementString("FillColorEx",     fillBgrHex);
-            writer.WriteElementString("AlphaBackColor",  "255");
+            var fillRgbHex = ColorConverter.ToRgbHexString(circle.FillColor!);
+            // Golden.XML 단색 채움 규격: FillPattern=6, BackColor=RRGGBB
+            writer.WriteElementString("FillPattern",     "6");
+            writer.WriteElementString("BackColor",       fillRgbHex);
+            writer.WriteElementString("AlphaBackColor",  "0");
         }
         else
         {
-            // 완전 투명 (변압기 권선 등)
+            // 투명 (변압기 권선 등): FillPattern=0
             writer.WriteElementString("FillPattern",     "0");
-            writer.WriteElementString("Transparent",     "TRUE");
-            writer.WriteElementString("BackColor",       "0");
+            writer.WriteElementString("BackColor",       "000000");
             writer.WriteElementString("AlphaBackColor",  "0");
         }
 

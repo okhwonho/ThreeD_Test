@@ -24,8 +24,8 @@ public static class XmlConstants
     /// <summary>Picture 기본 타입 값 (Standard 화면 = 0, Ground Truth)</summary>
     public const string PictureType = "0";
 
-    /// <summary>Picture 기본 배경색 (zenon BGR COLORREF: #07101C -> 1C1007)</summary>
-    public const string PictureBackgroundColor = "1C1007";
+    /// <summary>Picture 기본 배경색 (zenon RGB 헥사코드: #07101C -> 07101C)</summary>
+    public const string PictureBackgroundColor = "07101C";
 
     /// <summary>Picture 기본 템플릿(프레임) 이름</summary>
     public const string PictureDefaultTemplate = "MAIN";
@@ -154,6 +154,6 @@ public static class XmlConstants
     /// <summary>완전 투명 FillPattern = 0</summary>
     public const int FillPatternHollow      = 0;
 
-    /// <summary>단색 채움 FillPattern = 1 (Solid Fill)</summary>
-    public const int FillPatternSolid       = 1;
+    /// <summary>단색 채움 FillPattern = 6 (Golden.XML 검증 완료)</summary>
+    public const int FillPatternSolid       = 6;
 }

@@ -1,116 +1,115 @@
 # Latest Execution Report
 
-> **작업 일시:** 2026-09-28 16:42 KST  
-> **마일스톤:** zenon 15 XML 심층 스키마 분석 및 자체 검증(Self-Validation) 완료 — 텍스트 블랙아웃 및 심볼 채우기 결함의 근본 원인 규명 및 엔진 전면 리팩토링
+> **작업 일시:** 2026-09-28 16:53 KST  
+> **마일스톤:** zenon 15 Golden Sample (`Golden.XML`) 정밀 분석 및 스키마 완벽 복제 — RGB 색상 체계 교정(모선 청색 왜곡 해결), 단색 채움(FillPattern=6) 및 텍스트 렌더링 계층 구조 복제 완료
 
 ---
 
-## 1. Ground Truth 분석 및 근본 원인 규명 (Root Cause Identification)
+## 1. Golden Sample (`Golden.XML`) 심층 분석 결과
 
-### 1.1 텍스트(Text, TYPE="107") 블랙아웃 결함의 근본 원인
-- **현상:** 다크 배경에서 모든 텍스트가 렌더링되지 않고 완전히 사라짐.
+사용자가 프로젝트 루트에 제공한 정품 zenon 15 화면 XML 파일인 `Golden.XML` (UTF-16 LE, 33,812 bytes)을 Python 파서로 정밀 디컴파일 및 역공학 분석한 결과, 기존의 가설적/추측성 태그 구조와 상이한 zenon 15 고유의 렌더링 계층 구조가 규명되었습니다.
+
+### 1.1 RGB vs BGR 색상 규격 교정 (345kV 모선 청색 왜곡 해결)
+- **현상:** 345kV 주 모선(적색 `#E53935`)이 zenon 런타임에서 청색으로 왜곡되어 렌더링됨.
 - **원인 규명:**
-  1. 기존 `TextWriter.cs`에 포함되어 있던 `<AlphaForeColor>0</AlphaForeColor>` 태그가 원인이었음.
-  2. zenon 그래픽 엔진에서 `AlphaForeColor`는 전경 폰트(글자)의 Alpha 채널(불투명도)을 정의하며, `0`으로 지정되면 **글자 자체가 100% 완전 투명(Fully Transparent)** 처리되어 화면에서 완전히 소멸함.
-  3. **해결:** `<AlphaForeColor>255</AlphaForeColor>` (완전 불투명 100% 선명도)로 수정하고, 배경 투명화는 `<AlphaBackColor>0</AlphaBackColor>` 및 `<Transparent>TRUE</Transparent>`로 명확히 분리.
+  - `Golden.XML` 내의 모든 색상 태그(`<TextColor>`, `<LineColorEx>`, `<BackColor>`, `<BackgroundColor>`)는 BGR이 아닌 **순수 표준 RGB 6자리 Hex (`RRGGBB`)** 형식임이 확인됨.
+  - zenon XML 태그 중 DWORD 정수 속성(COLORREF)만 이진 BGR을 사용하고, 16진수 문자열 속성(`LineColorEx`, `BackgroundColor` 등)은 **표준 대문자 RGB Hex**를 읽음.
+  - 기존에 주입된 BGR 문자열 `3539E5`로 인해 R과 B가 뒤바뀌어 적색 모선이 청색으로 표출되었음.
+- **해결:** `ColorConverter.ToRgbHexString()`을 신설하여 모든 색상 속성에 완벽한 RGB Hex(`E53935`, `00E676`, `FFB000`, `00C853`, `07101C`)를 주입하도록 전면 교정함.
 
-### 1.2 기기 심볼(차단기/접지기) 단색 채움(Solid Fill) 실패 및 선 색상 무시 원인
-- **현상:** 차단기/접지기 심볼 내부가 채워지지 않고 투명하게 보이거나 선 색상이 의도대로 나오지 않음.
-- **원인 규명:**
-  1. **헥사코드 포맷 불일치:** zenon 15의 `LineColorEx`, `FillColorEx` 속성은 **BBGGRR (BGR 16진수)** 포맷을 요구함.
-  2. 기존 코드에서는 C#의 `TrimStart('#')`로 RGB 16진수(`00C853`, `E53935`)를 그대로 직렬화하고 있었음.
-  3. zenon 파서가 RGB 포맷의 헥사코드를 인식하지 못하거나 엉뚱한 BGR 색상으로 해석하여 투명/기본값으로 폴백됨.
-  4. **해결:** `ColorConverter.ToBgrHexString()` 메서드를 신설하여 모든 `LineColorEx` 및 `FillColorEx` 태그에 완벽한 BGR 16진수(`53C800`, `3539E5`, `76E600`, `FFB000`)를 출력하도록 전면 교정.
+### 1.2 단색 사각형(Solid Rectangle, TYPE="102") 채움 스키마 규명
+- `Golden.XML`에서 단색(Solid Fill) 채움이 적용된 사각형의 실제 구조:
+  ```xml
+  <Elements_n NODE="zenOn(R) embedded object" TYPE="102">
+    <StartX>...</StartX>
+    <StartY>...</StartY>
+    <Width>...</Width>
+    <Height>...</Height>
+    <LineWidth>1</LineWidth>
+    <LineType>0</LineType>
+    <LineColorEx>FFFFFF</LineColorEx>
+    <AlphaLineColor>0</AlphaLineColor>
+    <FillStyle/>
+    <FillPattern>6</FillPattern>           <!-- ★ zenon 15 순수 단색 채움 코드는 '6' -->
+    <BackColor>00C853</BackColor>          <!-- ★ 채움 색상은 BackColor에 RGB Hex로 기록 -->
+    <AlphaBackColor>0</AlphaBackColor>
+  </Elements_n>
+  ```
+- **핵심 발견:**
+  1. 단색 채움 패턴 코드는 `1`이나 `8`이 아닌 **`6`** (`<FillPattern>6</FillPattern>`)임.
+  2. 투명(Transparent) 사각형은 **`<FillPattern>0</FillPattern>`**, `<BackColor>000000</BackColor>`, `<AlphaBackColor>0</AlphaBackColor>`로 표현됨.
+  3. `<Transparent>` 및 `<FillColorEx>` 태그는 `Golden.XML`의 벡터 요소에 전혀 존재하지 않으며, zenon 15 파서는 `<FillPattern>`과 `<BackColor>`의 조합으로 채움을 제어함.
 
----
-
-## 2. 엔진 리팩토링 상세 내역 (Engine Refactoring)
-
-### 2.1 ColorConverter (`ColorConverter.cs`)
-- `ToBgrHexString(string htmlColor)` 신설: `#RRGGBB` 문자열에서 R, G, B를 파싱하여 zenon 15 규격에 맞는 `BBGGRR` 6자리 대문자 16진수 문자열로 변환.
-
-### 2.2 TextWriter (`TextWriter.cs`)
-- 텍스트 노드 Ground Truth 일치화:
+### 1.3 텍스트(Text, TYPE="107") 노드 계층 구조 규명
+- `Golden.XML`의 정품 텍스트 요소 구조:
   ```xml
   <Elements_n NODE="zenOn(R) embedded object" TYPE="107">
     <StartX>...</StartX>
     <StartY>...</StartY>
     <Width>...</Width>
     <Height>...</Height>
-    <Text>...</Text>
-    <FontSize>...</FontSize>
-    <ForeColor>16777215</ForeColor>
-    <LineColorEx>FFFFFF</LineColorEx>
-    <BackColor>0</BackColor>
-    <LineColor>FFFFFF</LineColor>
-    <AlphaForeColor>255</AlphaForeColor>  <!-- 글자 100% 가시성 확보 -->
-    <AlphaLineColor>FFFFFF</AlphaLineColor>
-    <AlphaBackColor>0</AlphaBackColor>    <!-- 배경 100% 투명 -->
-    <Transparent>TRUE</Transparent>
+    <Text>HVDC BIPOLE SYSTEM</Text>
+    <TextStyle/>
+    <LinkedFont>Default font5</LinkedFont>
+    <FontSize>18</FontSize>
+    <TextColor>90CAF9</TextColor>          <!-- ★ 글자 색상은 <TextColor>RRGGBB</TextColor> -->
+    <HorizontalAlign>8</HorizontalAlign>
+    <VerticalAlign>0</VerticalAlign>
+    <Wordbreak>TRUE</Wordbreak>
+    <FillStyle/>
+    <BackColor>C0C0C0</BackColor>
+    <AlphaBackColor>0</AlphaBackColor>     <!-- ★ 배경 완전 투명화 -->
   </Elements_n>
   ```
-
-### 2.3 RectangleWriter & CircleWriter (`RectangleWriter.cs`, `CircleWriter.cs`)
-- 단색 채움(차단기 CB, 계측 카드 등):
-  ```xml
-  <FillPattern>1</FillPattern>
-  <Transparent>FALSE</Transparent>
-  <BackColor>{FillRef}</BackColor>
-  <FillColor>{FillRef}</FillColor>
-  <FillColorEx>{FillBgrHex}</FillColorEx>  <!-- BGR Hex 예: 53C800 -->
-  <AlphaBackColor>255</AlphaBackColor>
-  <ForeColor>16777215</ForeColor>
-  <LineColorEx>FFFFFF</LineColorEx>
-  ```
-- 투명 구역(Bay Box, 변압기 원환 등):
-  ```xml
-  <FillPattern>0</FillPattern>
-  <Transparent>TRUE</Transparent>
-  <BackColor>0</BackColor>
-  <AlphaBackColor>0</AlphaBackColor>
-  <ForeColor>{BorderRef}</ForeColor>
-  <LineColorEx>{BorderBgrHex}</LineColorEx>
-  ```
-
-### 2.4 LineWriter (`LineWriter.cs`)
-- 모든 Line 노드에 `LineColorEx`를 BGR 16진수로 반드시 기록. 검은색 라인 배제(백색 `#FFFFFF` fallback).
+- **핵심 발견:**
+  1. 텍스트 글자 색상은 `<TextColor>RRGGBB</TextColor>` 태그로 제어됨 (기존의 추측성 태그인 ForeColor, LineColorEx, AlphaForeColor 등은 불필요).
+  2. 배경 투명화는 `<FillStyle/>` 빈 노드와 `<AlphaBackColor>0</AlphaBackColor>`의 조합으로 구현됨.
+  3. `<LinkedFont>Default font5</LinkedFont>` 및 `<TextStyle/>` 필수 노드 포함.
 
 ---
 
-## 3. 자체 검증(Self-Validation) 수행 결과
+## 2. 엔진 리팩토링 상세 내역
 
-### 3.1 Python 스크립트 기반 전수 Assert 검증
-- 생성된 `output_hvdc_full_system.xml` (192,358 bytes)을 파싱하여 다음 조건을 전수 Assert:
-  1. **총 70개 Text 노드(TYPE="107"):**
-     - `AlphaForeColor == "255"` (100% 통과, 0인 노드 0개)
-     - `Transparent == "TRUE"` 및 `AlphaBackColor == "0"` (100% 통과)
-     - `LineColorEx == "FFFFFF"` (100% 통과)
-  2. **총 11개 차단기(CB) 단색 사각형(TYPE="102", 32×32):**
-     - `FillPattern == "1"`, `Transparent == "FALSE"`, `AlphaBackColor == "255"` (100% 통과)
-     - `FillColorEx == "53C800"` (BGR 포맷 100% 일치)
-     - `LineColorEx == "FFFFFF"` (100% 통과)
-  3. **총 81개 선(Line) 노드(TYPE="101"):**
-     - `LineColorEx`가 유효한 6자리 BGR 16진수이며 `000000`(검정)이 아님 (100% 통과)
-  4. **총 15개 원(Circle) 노드(TYPE="103"):**
-     - 9개 접지기(ES) 단색 원: `Transparent == "FALSE"`, `AlphaBackColor == "255"`, `FillColorEx == "53C800"` (100% 통과)
-     - 6개 변압기(TR) 투명 원환: `Transparent == "TRUE"`, `AlphaBackColor == "0"` (100% 통과)
+### 2.1 `ColorConverter.cs` & `XmlConstants.cs`
+- `ColorConverter.ToRgbHexString()` 추가: `#RRGGBB` 문자열을 대문자 6자리 RGB 16진수로 정규화.
+- `XmlConstants.PictureBackgroundColor`: `"07101C"` (Dark Navy 표준 RGB Hex).
+- `XmlConstants.FillPatternSolid`: `6` (Golden.XML 기반 규격).
+- `XmlConstants.FillPatternNone`: `0`.
 
-### 3.2 xUnit 회귀 방지 테스트 통합
-- `CliE2ETests.Cli_SelfValidation_StrictSchemaRules_AllElementsVerified` 테스트를 작성하여 전체 75개 테스트를 자동화 파이프라인에 영구 등록 완료.
+### 2.2 `TextWriter.cs`
+- `Golden.XML`의 `TYPE="107"` 구조와 1:1 완벽 복제.
+- `TextColor` 노드에 6자리 대문자 RGB Hex 주입 (색상 미지정 시 `FFFFFF` 기본값).
+- `LinkedFont` (`Default font5`), `TextStyle/`, `FillStyle/`, `AlphaBackColor` (`0`) 추가.
 
----
+### 2.3 `RectangleWriter.cs` & `CircleWriter.cs`
+- `FillPattern`을 단색일 경우 `6`, 투명일 경우 `0`으로 지정.
+- 단색 채움 색상을 `<BackColor>RRGGBB</BackColor>`에 기록.
+- 외곽선 색상을 `<LineColorEx>RRGGBB</LineColorEx>`에 기록.
+- 불필요하고 충돌을 일으키던 `<Transparent>`, `<FillColorEx>`, `<AlphaForeColor>` 태그 전면 제거.
 
-## 4. 검증 결과 (Validation Results)
-- **빌드 (`dotnet build`):** 성공 (경고 0, 오류 0)
-- **단위 및 E2E 테스트 (`dotnet test`):**
-  - 총 테스트 수: **75개** (신규 Self-Validation E2E 포함)
-  - 통과: **75개**
-  - 실패: **0개**
-  - 실행 시간: **69 ms**
-- **산출물:** `output_hvdc_full_system.xml` — **192,358 bytes** (UTF-16 LE BOM)
+### 2.4 `LineWriter.cs`
+- 모든 배선 라인에 `<LineColorEx>RRGGBB</LineColorEx>`를 RGB Hex로 출력하여 모선(345kV 적색 `#E53935`, DC 라인 형광 녹색 `#00E676`, DMR 중성선 `#FFB000`)의 원본 색상 왜곡 방지.
 
 ---
 
-## 5. Git 배포 정보 (Git Information)
-- **Branch:** `main`
-- **Remote:** `origin/main`
+## 3. 자체 검증(Self-Validation) 및 테스트 결과
+
+### 3.1 최종 산출물 (`output_hvdc_full_system.xml`) 전수 검증
+CLI 빌드 명령으로 최신 도면을 재생성 후 구조 분석:
+1. **Background:** `<BackgroundColor>07101C</BackgroundColor>` 확인.
+2. **CircuitBreaker (CB):**
+   - `<FillPattern>6</FillPattern>` (Solid Fill)
+   - `<BackColor>00C853</BackColor>` (녹색 단색 채움)
+   - `<LineColorEx>FFFFFF</LineColorEx>` (외곽선 백색)
+3. **Text Elements:**
+   - `<TextColor>`: 지정된 RGB 16진수 (`90CAF9`, `B0BEC5`, `FFFFFF` 등) 정상 출력
+   - `<FillStyle/>`, `<AlphaBackColor>0</AlphaBackColor>` 투명 배경 처리 정상 적용
+4. **Busbar Lines:**
+   - 6개 주 모선 라인: `<LineColorEx>E53935</LineColorEx>` (적색 RGB 정상 출력, 청색 왜곡 해결)
+
+### 3.2 단위 테스트 전수 통과
+- `dotnet test` 실행 결과: **75개 테스트 전체 통과 (0 실패)**.
+  - `RootNodeTests`: 배경색 및 투명 구역 속성 검증 통과.
+  - `SldTopologyTests`: 모선 색상, CB 단색 채움, DS 테두리 검증 통과.
+  - `SymbolBindingTests`: 심볼 크기, 스냅 좌표, FillPattern=6 검증 통과.
+  - `CliE2ETests`: Golden Sample 스키마 규칙 및 E2E CLI 변환 전수 검증 통과.

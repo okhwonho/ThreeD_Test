@@ -143,7 +143,7 @@ public sealed class RootNodeTests
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
         var bg = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/BackgroundColor")!.InnerText;
-        Assert.Equal("1C1007", bg);
+        Assert.Equal("07101C", bg);
     }
 
     [Fact]
@@ -164,8 +164,8 @@ public sealed class RootNodeTests
         Assert.NotNull(rect);
         Assert.Equal("102", rect.Attributes!["TYPE"]!.Value);
         Assert.Equal("0", rect.SelectSingleNode("AlphaBackColor")!.InnerText);
-        Assert.Equal("TRUE", rect.SelectSingleNode("Transparent")!.InnerText);
+        Assert.Equal("0", rect.SelectSingleNode("FillPattern")!.InnerText);
         Assert.Equal("1", rect.SelectSingleNode("LineWidth")!.InnerText);
-        Assert.Equal("756C5C", rect.SelectSingleNode("LineColorEx")!.InnerText);
+        Assert.Equal("5C6C75", rect.SelectSingleNode("LineColorEx")!.InnerText);
     }
 }
