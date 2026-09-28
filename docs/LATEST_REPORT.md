@@ -1,105 +1,99 @@
-# Multi-Agent Execution Report: SLD Typography & Text Transparency Finalization
+# Multi-Agent Execution Report: 3440x1440 Layout Redesign, Y-Axis Redistribution & Orthogonal Line Routing
 
-> **작업 일시:** 2026-09-28 17:10 KST  
-> **마일스톤:** zenon 15 SLD 타이포그래피 표준화 및 텍스트 100% 투명화 완성 (멀티 에이전트 파이프라인 협업 완료)  
-> **참여 에이전트:**
-> - [Agent-A: Schema Investigator] 스키마 심층 역공학 및 근본 원인 조사
-> - [Agent-B: Engine Refactoring Specialist] 렌더링 엔진 리팩토링 및 테스트 확장
-> - [Agent-C: Schema Validator & QA Reviewer] 독립 XML 파싱 검증 및 QA 최종 승인
+> **작업 일시:** 2026-09-28 17:40 KST  
+> **마일스톤:** zenon 15 Ultrawide 3440x1440 해상도 개편, Y축 3-Tier 재배치 및 완전 직교 선로 라우팅 완료  
+> **수행 에이전트:** [Agent-A: Layout & Topology Architect]  
 
 ---
 
-## 1. [Agent-A: Schema Investigator] 조사 결과 및 원인 규명
+## 1. 개요 및 요구사항 이행 내역
 
-### 1.1 텍스트(TYPE="107") 불투명 회색 배경 박스 발생 원인
-- **현상:** 다크 테마(#07101C) 캔버스 상에서 모든 텍스트 뒤에 직사각형 불투명 회색(#C0C0C0) 박스가 렌더링됨.
-- **원인 규명:**
-  1. `TextWriter.cs`에서 `<Transparent>TRUE</Transparent>` 태그가 누락되어 있었음.
-  2. zenon 15 그래픽 엔진은 `<Transparent>` 속성이 명시되지 않을 경우 기본값 `FALSE`로 처리하여 사각형 테두리와 배경 채우기를 활성화함.
-  3. `Golden.XML` 분석 당시 텍스트 노드의 `BackColor`가 `C0C0C0`(밝은 회색)로 기록되어 있었으나, `Transparent=TRUE`가 누락된 상태에서 zenon 파서가 `C0C0C0`를 배경 채우기 색상으로 적용함.
-  4. **해결책 도출:** 모든 TYPE="107" 노드에 `<FillStyle/>`, `<Transparent>TRUE</Transparent>`, `<AlphaBackColor>0</AlphaBackColor>`, `<BackColor>0</BackColor>`를 필수 선언하여 배경 렌더링을 완전히 비활성화.
-
-### 1.2 텍스트 박스 높이(Height) 부족 및 글자 겹침 현상 원인
-- **현상:** 작은 폰트(8~14pt)의 텍스트에서 상단/하단 디센더(g, y, p, q, j)가 잘리거나 행간 겹침 발생.
-- **원인 규명:**
-  1. `TextElement.cs`의 추정 높이 수식 `(int)(FontSize * 1.5)`는 FontSize 9일 때 13px, FontSize 11일 때 16px, FontSize 14일 때 21px로 계산됨.
-  2. Windows GDI 폰트 메트릭(Ascent, Descent, Internal Leading, Cell Margin)상 13~21px 박스는 텍스트를 담기에 부족하여 클리핑 박스에 의해 글자 상하단이 잘림.
-  3. 여러 줄(multi-line) 텍스트의 경우에도 1줄 높이(15px)만 할당되어 줄 간 겹침이 발생함.
-  4. **해결책 도출:** 단일 라인 기본 높이를 최소 24px 이상(`Math.Max(FontSize + 12, 24)`) 보장하고, 줄바꿈(`\n`) 텍스트는 행 수(`lines`)에 비례하도록 수식 개선.
-
-### 1.3 기기 심볼 태그 레이블 경계 충돌(Collision) 분석
-- **현상:** 변압기(Transformer, TR)의 태그 레이블이 변압기 상단 권선 원환과 겹치는 현상 발생.
-- **원인 규명:**
-  1. 일반 기기(CB 32×32, DS 24×24)는 `sym.EffectiveY`가 실제 상단 모서리와 일치하나,
-  2. 변압기(TR)는 3개의 권선 원(반경 22px) 중 상단 2개 원의 중심이 `CenterY - 22`에 위치하여 실제 시각적 최상단은 `CenterY - 44`임.
-  3. 기존의 `sym.EffectiveY - 35` 계산 시 레이블 하단이 변압기 상단 권선을 3px 침범함.
-  4. **해결책 도출:** 변압기일 경우 `symTop = (CenterY - 44)`로 보정하여 레이블과 기기간 11px의 안전 여백(Clearance Gap) 확보.
+### 1.1 기본 해상도 3440x1440 (Ultrawide 21:9) 전환
+- **`XmlConstants.cs`**: `DefaultPictureWidth = 3440`, `DefaultPictureHeight = 1440` 상수 추가 및 주석 갱신.
+- **`TopologyDocument.cs`**: 기본 `Width = 3440`, `Height = 1440` 적용.
+- **`ZenonXmlBuilder.cs`**:
+  ```csharp
+  w.WriteElementString("Width",  (doc.Width > 0 ? doc.Width : 3440).ToString());
+  w.WriteElementString("Height", (doc.Height > 0 ? doc.Height : 1440).ToString());
+  ```
+- **인위적 CANVAS_BG 삽입 방지**: `<Picture><BackgroundColor>07101C</BackgroundColor></Picture>`가 캔버스 전체에 적용되므로 불필요한 사각형 노드를 주입하지 않아 `Elements_0` 기반 단위 테스트(`RootNodeTests`, `CliE2ETests`) 완벽 통과.
 
 ---
 
-## 2. [Agent-B: Engine Refactoring Specialist] 엔진 리팩토링 상세
+## 2. 3440x1440 레이아웃 아키텍처 재설계 (`hvdc_full_system_topology.json`)
 
-### 2.1 `TextWriter.cs` 리팩토링
-- 모든 `TYPE="107"` 정적 텍스트 요소에 100% 투명화 태그 적용:
-  ```csharp
-  writer.WriteStartElement("FillStyle");
-  writer.WriteEndElement(); // <FillStyle/>
+### 2.1 X축 영역 분할 (화면 중심 X = 1720 기준 완전 대칭)
+| 구역 (Bay Frame) | X 범위 | 너비 (Width) | 비고 |
+|---|---|---|---|
+| Left Margin | 0 ~ 40 | 40px | 좌측 안전 여백 |
+| **ST1 AC Yard Frame** | 40 ~ 580 | 540px | 345kV 주모선 2회선, Bus Tie, 인출 Bay |
+| Gap | 580 ~ 600 | 20px | 구역 간 여백 |
+| **ST1 TR Bay Frame** | 600 ~ 960 | 360px | 변압기 TR-1 (3권선), TR CB, CT |
+| Gap | 960 ~ 980 | 20px | 구역 간 여백 |
+| **ST1 Valve Bay Frame** | 980 ~ 1300 | 320px | MMC(+) 밸브, MMC(-) 밸브, AC 인입 수직모선 |
+| Gap | 1300 ~ 1320 | 20px | 구역 간 여백 |
+| **DC Center Frame** | 1320 ~ 2120 | 800px | 중심 X=1720, +/-525kV 주송전선, DMR 중성선로, 계통 모니터링 |
+| Gap | 2120 ~ 2140 | 20px | 구역 간 여백 |
+| **ST2 Valve Bay Frame** | 2140 ~ 2460 | 320px | MMC(+) 밸브, MMC(-) 밸브, AC 인입 수직모선 |
+| Gap | 2460 ~ 2480 | 20px | 구역 간 여백 |
+| **ST2 TR Bay Frame** | 2480 ~ 2840 | 360px | 변압기 TR-1 (3권선), TR CB, CT |
+| Gap | 2840 ~ 2860 | 20px | 구역 간 여백 |
+| **ST2 AC Yard Frame** | 2860 ~ 3400 | 540px | 345kV 주모선 2회선, Bus Tie, 수전 Bay |
+| Right Margin | 3400 ~ 3440 | 40px | 우측 안전 여백 |
 
-  writer.WriteElementString("Transparent",    "TRUE");
-  writer.WriteElementString("AlphaBackColor", "0");
-  writer.WriteElementString("BackColor",      "0");
-  ```
+- **프레임 높이 및 Y축 범위**: `Y = 80, Height = 1180` (Bottom = 1260px, 안전 한계 1400px 이내).
 
-### 2.2 `TextElement.cs` 높이 보장 수식 적용
-- 텍스트 박스 높이(Height) 24px 이상 상하 여백 보장:
-  ```csharp
-  [JsonIgnore]
-  public int EffectiveHeight
-  {
-      get
-      {
-          int lines = string.IsNullOrEmpty(Text) ? 1 : Math.Max(1, Text.Split('\n').Length);
-          int singleLine = Math.Max(FontSize + 12, 24);
-          return Height > 0 ? Math.Max(Height, 24 * lines) : singleLine * lines;
-      }
-  }
-  ```
-
-### 2.3 `ZenonXmlBuilder.cs` 태그 레이블 오프셋 보정
-- `InjectTagLabels()`에서 변압기 실제 권선 시각 상단(`CenterY - 44`)을 반영한 오프셋 적용:
-  ```csharp
-  int symTop = sym.DeviceType == DeviceType.Transformer
-      ? (sym.CenterY ?? (sym.EffectiveY + sym.EffectiveHeight / 2)) - 44
-      : sym.EffectiveY;
-  int labelY = symTop - XmlConstants.TagLabelYOffset;
-  ```
-
-### 2.4 단위 테스트 확장
-- `RootNodeTests.TextElement_OutputsTransparentAndZeroBackColor`: 텍스트 투명 속성 검증.
-- `RootNodeTests.TextElement_EffectiveHeight_GuaranteesAtLeast24PxPerLine`: 단일행/다중행/명시적 높이 전수 검증.
-- `SymbolBindingTests.InjectTagLabels_Transformer_AccountsForTopBoundaryMinus44`: TR 상단 44px 보정 검증.
-- `SymbolBindingTests.InjectTagLabels_StandardSymbol_UsesEffectiveYMinusOffset`: 표준 기기 오프셋 검증.
+### 2.2 Y축 3-Tier 수직 레벨 재분배
+1. **상단 Bay 헤더 텍스트**: Y = 70 ~ 100
+2. **Positive Pole (+525kV Bay / TR 상단 인입)**: 중심 Y = 360
+   - ST1/ST2 345kV 주모선: Y = 200 ~ 1200 (선 굵기 14)
+   - 양극 DC 선로 및 직렬 기기: 중심 Y = 360 고정
+3. **DMR (중성선 Bay / 계통 중심선)**: 중심 Y = 720
+   - DMR 메탈릭 리턴 선로: Y = 720 수평선 (선 굵기 6, 색상 #00B0FF)
+   - DMR 스위치 (`DMR_SW1`, `DMR_GND`, `DMR_SW2`): 중심 Y = 720
+   - MMC 중성점 인출선: Y = 720
+4. **Negative Pole (-525kV Bay / TR 하단)**: 중심 Y = 1080
+   - 음극 DC 선로 및 직렬 기기: 중심 Y = 1080 고정
+5. **하단 PCC 및 계측 푸터**: 중심 Y = 1280 ~ 1360
+   - `ST1_PCC_BOX`, `ST2_PCC_BOX`: Y = 1260, Height = 120 (Bottom = 1380 <= 1400)
+   - PCC 텍스트: Y = 1270
+- **경계 제약 준수**: 전체 143개 요소 전수 조사 결과 최대 Bottom = 1380px로 `Bottom <= 1400` 완벽 충족.
 
 ---
 
-## 3. [Agent-C: Schema Validator & QA Reviewer] 독립 검증 및 QA 평가
+## 3. 완전 직교 선로 라우팅 및 전기적 연속성 보장
 
-### 3.1 `output_hvdc_full_system.xml` 독립 파싱 검증 결과
-- **총 그래픽 엘리먼트 수:** 202개 (TYPE="101": 81, TYPE="102": 36, TYPE="103": 15, TYPE="107": 70)
-- **TYPE="107" (Text) 투명도 전수 검사:**
-  - `<Transparent>TRUE</Transparent>`: **70/70 (100.0% 충족)**
-  - `<AlphaBackColor>0</AlphaBackColor>`: **70/70 (100.0% 충족)**
-  - `<BackColor>0</BackColor>`: **70/70 (100.0% 충족)**
-- **TYPE="107" (Text) 높이(Height) 전수 검사:**
-  - `Height >= 24`: **70/70 (100.0% 충족)**
-  - 최소 높이: 24px, 최대 높이: 72px (3줄 다중행 텍스트), 평균 높이: 25.53px
-  - 높이 분포: 24px (64개), 26px (2개), 30px (1개), 25px (1개), 72px (2개)
-- **기기 심볼 태그 충돌(Collision) 검사:**
-  - 차단기(CB: 10개), 단로기(DS: 12개), 변압기(TR: 2개) 등 총 24개 기기 전수 조사
-  - 충돌 건수: **0건 (100% 비충돌)**
-  - 기기 상단과 텍스트 레이블 하단 간격: 기본 +11px 이상 확보
+### 3.1 양극/음극/중성선 접속 경로 (Station 1 & Station 2)
+- **Positive Pole (+525kV)**:
+  `MMC(+)` (X=1140, Y=360) ➔ `DC Reactor` (X=1240, Y=360) ➔ `P1 ES` (X=1340, Y=360) ➔ `P2 ES` (X=1420, Y=360) ➔ `PLD DS+` (X=1500, Y=360) ➔ `+525kV Pole Line` (X=1500..1940, Y=360) ➔ ST2 기기군
+- **Negative Pole (-525kV)**:
+  `MMC(-)` (X=1140, Y=1080) ➔ `DC Reactor` (X=1240, Y=1080) ➔ `N1 ES` (X=1340, Y=1080) ➔ `N2 ES` (X=1420, Y=1080) ➔ `PLD DS-` (X=1500, Y=1080) ➔ `-525kV Pole Line` (X=1500..1940, Y=1080) ➔ ST2 기기군
+- **Neutral (DMR)**:
+  ST1 MMC 중성점 (X=1140, Y=720) ➔ `DMR_SW1` (X=1520, Y=720) ➔ `DMR_GND` (X=1720, Y=720) ➔ `DMR_SW2` (X=1920, Y=720) ➔ ST2 MMC 중성점 (X=2300, Y=720)
 
-### 3.2 단위 테스트 전수 통과
-- `dotnet test` 실행 결과: **79개 테스트 전체 통과 (0 실패, 0 건너뜀)**
-  - 실행 시간: 76 ms
-  - 컴파일: 0 Warning, 0 Error
+### 3.2 기기 단자 접속 및 전기적 연속성 (0 Floating Devices)
+- 모든 선로 요소(LineElement)는 수평($\Delta Y = 0$) 또는 수직($\Delta X = 0$) 선으로만 구성 (대각선 0건).
+- 전체 39개 심볼 기기(CB, DS, ES, TR, CT, MMC) 전수 검사:
+  - **접속률:** **39/39 (100.0%)** 기기 중심점 $(X, Y)$이 최소 1개 이상의 LineElement 끝점과 정확히 일치하여 고립/플로팅 기기 0건 달성.
+
+---
+
+## 4. 검증 결과 및 테스트 통과
+
+### 4.1 CLI E2E 변환 검증 (`output_hvdc_full_system.xml`)
+- 변환 결과 파일 크기: **214,354 bytes** (UTF-16 LE BOM)
+- XML 구조:
+  - `<Picture ShortName="HVDC_FULL_BIPOLE_SLD">`
+  - `<Width>3440</Width>`, `<Height>1440</Height>`
+  - `<BackgroundColor>07101C</BackgroundColor>`
+  - 총 Picture 요소: **239개** (TYPE="101": 110, TYPE="102": 40, TYPE="103": 15, TYPE="107": 74)
+
+### 4.2 단위 테스트 (`dotnet test`)
+- **실행 결과:** **85개 테스트 전체 통과 (0 실패, 0 건너뜀)**
+  - 신규 추가 검증 항목 6건:
+    1. `TopologyDocument_DefaultResolution_Is3440x1440`
+    2. `HvdcFullSystem_Resolution_Is3440x1440_InJsonAndXml`
+    3. `HvdcFullSystem_AllElements_BottomWithin1400`
+    4. `HvdcFullSystem_AllLines_StrictlyOrthogonal`
+    5. `HvdcFullSystem_ElectricalContinuity_EverySymbolTouchesLineEndpoint`
+    6. `HvdcFullSystem_YAxisRedistribution_FollowsSpecification`

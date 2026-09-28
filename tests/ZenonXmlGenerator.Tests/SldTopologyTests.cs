@@ -145,4 +145,139 @@ public sealed class SldTopologyTests
         Assert.NotNull(type16);
         Assert.Equal(0, type16.Count);
     }
+
+    // ─── 3440x1440 Layout Redesign & Orthogonal Routing Tests ────────────
+
+    [Fact]
+    public void TopologyDocument_DefaultResolution_Is3440x1440()
+    {
+        var doc = new TopologyDocument();
+        Assert.Equal(3440, doc.Width);
+        Assert.Equal(1440, doc.Height);
+    }
+
+    [Fact]
+    public void HvdcFullSystem_Resolution_Is3440x1440_InJsonAndXml()
+    {
+        var fullJsonPath = Path.Combine("Samples", "hvdc_full_system_topology.json");
+        var jsonText = File.ReadAllText(fullJsonPath);
+        var gen = new ZenonXmlGenerator();
+        var bytes = gen.GenerateFromJson(jsonText);
+        var xml = LoadXml(bytes);
+
+        var picture = xml.DocumentElement!.SelectSingleNode("Apartment/Picture");
+        Assert.NotNull(picture);
+        Assert.Equal("3440", picture.SelectSingleNode("Width")!.InnerText);
+        Assert.Equal("1440", picture.SelectSingleNode("Height")!.InnerText);
+    }
+
+    [Fact]
+    public void HvdcFullSystem_AllElements_BottomWithin1400()
+    {
+        var fullJsonPath = Path.Combine("Samples", "hvdc_full_system_topology.json");
+        var jsonText = File.ReadAllText(fullJsonPath);
+        var doc = System.Text.Json.JsonSerializer.Deserialize<TopologyDocument>(jsonText)!;
+
+        foreach (var elem in doc.Elements)
+        {
+            int bottom = elem switch
+            {
+                RectangleElement r => r.Y + r.Height,
+                LineElement l      => Math.Max(l.Y1, l.Y2),
+                SymbolElement s    => (s.CenterY ?? (s.Y + s.Height / 2)) + Math.Max(s.Height, 32) / 2,
+                TextElement t      => t.Y + t.EffectiveHeight,
+                _                  => 0,
+            };
+            Assert.True(bottom <= 1400,
+                $"Element '{elem.Id}' ({elem.GetType().Name}) exceeds bottom boundary: bottom={bottom} > 1400");
+        }
+    }
+
+    [Fact]
+    public void HvdcFullSystem_AllLines_StrictlyOrthogonal()
+    {
+        var fullJsonPath = Path.Combine("Samples", "hvdc_full_system_topology.json");
+        var jsonText = File.ReadAllText(fullJsonPath);
+        var doc = System.Text.Json.JsonSerializer.Deserialize<TopologyDocument>(jsonText)!;
+
+        foreach (var elem in doc.Elements)
+        {
+            if (elem is LineElement line)
+            {
+                bool isOrthogonal = line.X1 == line.X2 || line.Y1 == line.Y2;
+                Assert.True(isOrthogonal,
+                    $"Line '{line.Id}' is diagonal: ({line.X1},{line.Y1}) -> ({line.X2},{line.Y2})");
+            }
+        }
+    }
+
+    [Fact]
+    public void HvdcFullSystem_ElectricalContinuity_EverySymbolTouchesLineEndpoint()
+    {
+        var fullJsonPath = Path.Combine("Samples", "hvdc_full_system_topology.json");
+        var jsonText = File.ReadAllText(fullJsonPath);
+        var doc = System.Text.Json.JsonSerializer.Deserialize<TopologyDocument>(jsonText)!;
+
+        var lineEndpoints = new System.Collections.Generic.HashSet<(int, int)>();
+        foreach (var elem in doc.Elements)
+        {
+            if (elem is LineElement line)
+            {
+                lineEndpoints.Add((line.X1, line.Y1));
+                lineEndpoints.Add((line.X2, line.Y2));
+            }
+        }
+
+        int symbolCount = 0;
+        foreach (var elem in doc.Elements)
+        {
+            if (elem is SymbolElement sym)
+            {
+                symbolCount++;
+                int cx = sym.CenterX ?? (sym.X + sym.Width / 2);
+                int cy = sym.CenterY ?? (sym.Y + sym.Height / 2);
+
+                Assert.True(lineEndpoints.Contains((cx, cy)),
+                    $"Floating symbol detected: '{sym.Id}' ({sym.DeviceType}, tag={sym.TagLabel}) at ({cx},{cy}) does not touch any line endpoint.");
+            }
+        }
+        Assert.True(symbolCount >= 30, $"Expected >=30 symbols, found {symbolCount}");
+    }
+
+    [Fact]
+    public void HvdcFullSystem_YAxisRedistribution_FollowsSpecification()
+    {
+        var fullJsonPath = Path.Combine("Samples", "hvdc_full_system_topology.json");
+        var jsonText = File.ReadAllText(fullJsonPath);
+        var doc = System.Text.Json.JsonSerializer.Deserialize<TopologyDocument>(jsonText)!;
+
+        // Positive pole devices centered at Y=360
+        string[] posPoleIds = ["ST1_MMC_POS", "ST1_DCR_POS", "ST1_P1_ES", "ST1_PLD_DS_POS",
+                               "ST2_PLD_DS_POS", "ST2_P1_ES", "ST2_DCR_POS", "ST2_MMC_POS"];
+        foreach (var id in posPoleIds)
+        {
+            var sym = doc.Elements.Find(e => e.Id == id) as SymbolElement;
+            Assert.NotNull(sym);
+            Assert.Equal(360, sym.CenterY);
+        }
+
+        // DMR switches centered at Y=720
+        string[] dmrIds = ["DMR_SW1", "DMR_GND", "DMR_SW2"];
+        foreach (var id in dmrIds)
+        {
+            var sym = doc.Elements.Find(e => e.Id == id) as SymbolElement;
+            Assert.NotNull(sym);
+            Assert.Equal(720, sym.CenterY);
+        }
+
+        // Negative pole devices centered at Y=1080
+        string[] negPoleIds = ["ST1_MMC_NEG", "ST1_DCR_NEG", "ST1_N1_ES", "ST1_PLD_DS_NEG",
+                               "ST2_PLD_DS_NEG", "ST2_N1_ES", "ST2_DCR_NEG", "ST2_MMC_NEG"];
+        foreach (var id in negPoleIds)
+        {
+            var sym = doc.Elements.Find(e => e.Id == id) as SymbolElement;
+            Assert.NotNull(sym);
+            Assert.Equal(1080, sym.CenterY);
+        }
+    }
 }

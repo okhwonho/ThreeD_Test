@@ -23,10 +23,10 @@ public sealed class TopologyDocument
     public string SizeFromTemplate { get; set; } = "FALSE";
 
     [JsonPropertyName("width")]
-    public int Width { get; set; } = 1920;
+    public int Width { get; set; } = 3440;
 
     [JsonPropertyName("height")]
-    public int Height { get; set; } = 1080;
+    public int Height { get; set; } = 1440;
 
     [JsonPropertyName("elements")]
     public List<TopologyElement> Elements { get; set; } = new();

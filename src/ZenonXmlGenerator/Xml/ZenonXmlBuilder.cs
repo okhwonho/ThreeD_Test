@@ -123,8 +123,8 @@ public sealed class ZenonXmlBuilder
         w.WriteElementString("Template",         string.IsNullOrWhiteSpace(doc.Template) ? XmlConstants.PictureDefaultTemplate : doc.Template);
         w.WriteElementString("Type",             XmlConstants.PictureType);
         w.WriteElementString("SizeFromTemplate", string.IsNullOrWhiteSpace(doc.SizeFromTemplate) ? XmlConstants.PictureSizeFromTemplate : doc.SizeFromTemplate);
-        w.WriteElementString("Width",            doc.Width.ToString());
-        w.WriteElementString("Height",           doc.Height.ToString());
+        w.WriteElementString("Width",            (doc.Width > 0 ? doc.Width : 3440).ToString());
+        w.WriteElementString("Height",           (doc.Height > 0 ? doc.Height : 1440).ToString());
         w.WriteElementString("BackgroundColor",  XmlConstants.PictureBackgroundColor);
 
         // ─── 파이프라인: OrthogonalRouter → tagLabel 자동 주입 → 벡터 분해 ──
