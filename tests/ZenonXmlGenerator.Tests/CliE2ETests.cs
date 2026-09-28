@@ -205,7 +205,7 @@ public sealed class CliE2ETests
             Assert.Equal("HVDC_FULL_BIPOLE_SLD", picture.Attributes!["ShortName"]!.Value);
             Assert.Equal("MAIN", picture.SelectSingleNode("Template")!.InnerText);
             Assert.Equal("0", picture.SelectSingleNode("Type")!.InnerText);
-            Assert.Equal("TRUE", picture.SelectSingleNode("SizeFromTemplate")!.InnerText);
+            Assert.Equal("FALSE", picture.SelectSingleNode("SizeFromTemplate")!.InnerText);
 
             // Validate ST1 positive pole DC busbar is present (Busbar line TYPE=101, lineWidth=5, ALCUseColor=TRUE)
             var dcPosBus = doc.DocumentElement!.SelectSingleNode(

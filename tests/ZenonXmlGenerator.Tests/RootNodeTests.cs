@@ -123,7 +123,7 @@ public sealed class RootNodeTests
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
         var sizeFromTemplate = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/SizeFromTemplate")!.InnerText;
-        Assert.Equal("TRUE", sizeFromTemplate);
+        Assert.Equal("FALSE", sizeFromTemplate);
     }
 
     [Fact]

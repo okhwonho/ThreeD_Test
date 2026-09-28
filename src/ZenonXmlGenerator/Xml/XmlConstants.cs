@@ -30,8 +30,12 @@ public static class XmlConstants
     /// <summary>Picture 기본 템플릿(프레임) 이름</summary>
     public const string PictureDefaultTemplate = "MAIN";
 
-    /// <summary>Picture SizeFromTemplate 기본값</summary>
-    public const string PictureSizeFromTemplate = "TRUE";
+    /// <summary>
+    /// Picture SizeFromTemplate 기본값.
+    /// FALSE = 화면이 Width/Height 기준으로 렌더링 (3840 와이드 도면용).
+    /// TRUE = MAIN 프레임 크기 강제(1920)되어 3840 화면이 잘림 — 사용 금지.
+    /// </summary>
+    public const string PictureSizeFromTemplate = "FALSE";
 
     // ─── NODE 속성 값 ────────────────────────────────────────────────────
     /// <summary>Elements_n/@NODE — 모든 화면 요소에 공통 적용</summary>

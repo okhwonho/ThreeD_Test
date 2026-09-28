@@ -15,9 +15,12 @@ public sealed class TopologyDocument
     [JsonPropertyName("template")]
     public string Template { get; set; } = "MAIN";
 
-    /// <summary>프레임으로부터 크기 자동 적용 여부. 기본값 "TRUE".</summary>
+    /// <summary>
+    /// 프레임으로부터 크기 자동 적용 여부.
+    /// FALSE = Width/Height 기준 렌더링 (3840 와이드 등). TRUE = MAIN 프레임 크기 강제.
+    /// </summary>
     [JsonPropertyName("sizeFromTemplate")]
-    public string SizeFromTemplate { get; set; } = "TRUE";
+    public string SizeFromTemplate { get; set; } = "FALSE";
 
     [JsonPropertyName("width")]
     public int Width { get; set; } = 1920;
