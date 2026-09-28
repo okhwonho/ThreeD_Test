@@ -5,21 +5,8 @@ namespace ZenonXmlGenerator.Xml.ElementWriters;
 
 /// <summary>
 /// 원(Ellipse/Circle) 요소를 zenon XML로 출력한다. TYPE="103"
-///
-/// zenon Ground Truth 구조:
-/// <code>
-/// &lt;Elements_n NODE="zenOn(R) embedded object" TYPE="103"&gt;
-///   &lt;StartX&gt;cx - r&lt;/StartX&gt;
-///   &lt;StartY&gt;cy - r&lt;/StartY&gt;
-///   &lt;Width&gt;r * 2&lt;/Width&gt;
-///   &lt;Height&gt;r * 2&lt;/Height&gt;
-///   &lt;ForeColor&gt;{border COLORREF}&lt;/ForeColor&gt;
-///   &lt;BackColor&gt;{fill COLORREF}&lt;/BackColor&gt;
-///   &lt;LineWidth&gt;2&lt;/LineWidth&gt;
-///   &lt;FillPattern&gt;8&lt;/FillPattern&gt;
-///   &lt;AlphaBackColor&gt;0&lt;/AlphaBackColor&gt;
-/// &lt;/Elements_n&gt;
-/// </code>
+/// 2D 플랫 SCADA 규격을 준수하여 3D/그라데이션 효과를 비활성화하고,
+/// FillPattern=0 (투명) / FillPattern=1 (단색 채움)을 정확히 처리한다.
 /// </summary>
 public sealed class CircleWriter : IElementWriter
 {
@@ -34,15 +21,41 @@ public sealed class CircleWriter : IElementWriter
         writer.WriteAttributeString("NODE", XmlConstants.NodeEmbeddedObject);
         writer.WriteAttributeString("TYPE", TypeEllipse);
 
-        writer.WriteElementString("StartX",       circle.StartX.ToString());
-        writer.WriteElementString("StartY",       circle.StartY.ToString());
-        writer.WriteElementString("Width",        circle.Diameter.ToString());
-        writer.WriteElementString("Height",       circle.Diameter.ToString());
-        writer.WriteElementString("ForeColor",    ColorConverter.ToColorRefString(circle.BorderColor));
-        writer.WriteElementString("BackColor",    ColorConverter.ToColorRefString(circle.FillColor));
-        writer.WriteElementString("LineWidth",    circle.LineWidth.ToString());
-        writer.WriteElementString("FillPattern",  circle.FillPattern.ToString());
-        writer.WriteElementString("AlphaBackColor", "0");
+        writer.WriteElementString("StartX",          circle.StartX.ToString());
+        writer.WriteElementString("StartY",          circle.StartY.ToString());
+        writer.WriteElementString("Width",           circle.Diameter.ToString());
+        writer.WriteElementString("Height",          circle.Diameter.ToString());
+        writer.WriteElementString("LineWidth",       circle.LineWidth.ToString());
+        writer.WriteElementString("FillPattern",     circle.FillPattern.ToString());
+
+        var cleanBorder = circle.BorderColor.TrimStart('#');
+        writer.WriteElementString("ForeColor",       ColorConverter.ToColorRefString(circle.BorderColor));
+        writer.WriteElementString("LineColorEx",     cleanBorder);
+
+        if (!string.IsNullOrWhiteSpace(circle.FillColor))
+        {
+            var fillRef = ColorConverter.ToColorRefString(circle.FillColor);
+            writer.WriteElementString("BackColor",   fillRef);
+            writer.WriteElementString("FillColor",   fillRef);
+            writer.WriteElementString("FillColorEx", circle.FillColor.TrimStart('#'));
+        }
+
+        if (circle.FillPattern == XmlConstants.FillPatternHollow)
+        {
+            // 완전 투명 (변압기 권선 등)
+            writer.WriteElementString("AlphaBackColor", "0");
+            writer.WriteElementString("Transparent",    "TRUE");
+        }
+        else
+        {
+            // 단색 채움 (접지기 녹색 원 등)
+            writer.WriteElementString("AlphaBackColor", "100");
+            writer.WriteElementString("Transparent",    "FALSE");
+            writer.WriteElementString("Lightning",      "0");
+            writer.WriteElementString("LightIntensity", "0");
+            writer.WriteElementString("GradientDirection", "0");
+            writer.WriteElementString("Brightness",     "FALSE");
+        }
 
         writer.WriteEndElement(); // Elements_n
     }

@@ -39,17 +39,32 @@ public sealed class SldTopologyTests
     }
 
     [Fact]
+    public void CanvasBackground_Elements0_IsSolidDarkNavy()
+    {
+        var gen = new ZenonXmlGenerator();
+        var bytes = gen.GenerateFromJson(SampleSldJson);
+        var xml = LoadXml(bytes);
+
+        // Elements_0 should be the full canvas dark background
+        var bg = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
+        Assert.NotNull(bg);
+        Assert.Equal("102", bg.Attributes!["TYPE"]!.Value);
+        Assert.Equal("1",   bg.SelectSingleNode("FillPattern")!.InnerText);
+        Assert.Equal("100", bg.SelectSingleNode("AlphaBackColor")!.InnerText);
+        Assert.Equal("0",   bg.SelectSingleNode("LineWidth")!.InnerText);
+    }
+
+    [Fact]
     public void BusbarLine_OutputsCorrectLineWidthAndALCUseColor()
     {
         var gen = new ZenonXmlGenerator();
         var bytes = gen.GenerateFromJson(SampleSldJson);
         var xml = LoadXml(bytes);
 
-        // BUS_1 is Elements_4 (bay frames at 0..1, texts at 2..3)
-        var bus1 = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_4");
+        // Find busbar line (TYPE=101, LineWidth=5, ALCUseColor=TRUE)
+        var bus1 = xml.DocumentElement!.SelectSingleNode(
+            "Apartment/Picture/*[@TYPE='101' and LineWidth[text()='5']]");
         Assert.NotNull(bus1);
-        Assert.Equal("101", bus1.Attributes!["TYPE"]!.Value);
-        Assert.Equal("5",   bus1.SelectSingleNode("LineWidth")!.InnerText);
         Assert.Equal("TRUE", bus1.SelectSingleNode("ALCUseColor")!.InnerText);
     }
 
@@ -60,13 +75,11 @@ public sealed class SldTopologyTests
         var bytes = gen.GenerateFromJson(SampleSldJson);
         var xml = LoadXml(bytes);
 
-        // CB11 is now rendered as a green rectangle (TYPE=102, FillPattern=8).
-        // Variable-name based lookup via any descendant of Picture elements.
-        // CB body rectangle has id suffix "_BODY" — search for all TYPE=102 rectangles with FillPattern=8.
+        // CB11 is rendered as a green rectangle (TYPE=102, FillPattern=1, Width=32).
         var cbBodies = xml.DocumentElement!.SelectNodes(
-            "Apartment/Picture/*[@TYPE='102' and FillPattern[text()='8']]");
+            "Apartment/Picture/*[@TYPE='102' and FillPattern[text()='1'] and Width[text()='32']]");
         Assert.NotNull(cbBodies);
-        Assert.True(cbBodies.Count > 0, "Expected at least one CB body rectangle (FillPattern=8, TYPE=102).");
+        Assert.True(cbBodies.Count > 0, "Expected at least one CB body rectangle (FillPattern=1, Width=32, TYPE=102).");
     }
 
     [Fact]
@@ -76,11 +89,11 @@ public sealed class SldTopologyTests
         var bytes = gen.GenerateFromJson(SampleSldJson);
         var xml = LoadXml(bytes);
 
-        // DS elements → TYPE=102, FillPattern=0 (hollow)
+        // DS elements → TYPE=102, FillPattern=0 (hollow), Width=24
         var dsRects = xml.DocumentElement!.SelectNodes(
-            "Apartment/Picture/*[@TYPE='102' and FillPattern[text()='0'] and LineWidth[text()='2']]");
+            "Apartment/Picture/*[@TYPE='102' and FillPattern[text()='0'] and Width[text()='24']]");
         Assert.NotNull(dsRects);
-        Assert.True(dsRects.Count > 0, "Expected at least one DS hollow rectangle (FillPattern=0, LineWidth=2).");
+        Assert.True(dsRects.Count > 0, "Expected at least one DS hollow rectangle (FillPattern=0, Width=24).");
     }
 
     [Fact]

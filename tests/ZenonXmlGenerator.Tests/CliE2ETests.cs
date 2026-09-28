@@ -157,8 +157,15 @@ public sealed class CliE2ETests
             Assert.Equal("0", picture.SelectSingleNode("Type")!.InnerText);
             Assert.Equal("TRUE", picture.SelectSingleNode("SizeFromTemplate")!.InnerText);
 
-            // Validate Bay frame transparent properties
-            var bayAc = doc.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
+            // Validate Canvas background (Elements_0)
+            var canvasBg = doc.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
+            Assert.NotNull(canvasBg);
+            Assert.Equal("102", canvasBg.Attributes!["TYPE"]!.Value);
+            Assert.Equal("1", canvasBg.SelectSingleNode("FillPattern")!.InnerText);
+            Assert.Equal("100", canvasBg.SelectSingleNode("AlphaBackColor")!.InnerText);
+
+            // Validate Bay frame transparent properties (Elements_1)
+            var bayAc = doc.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_1");
             Assert.NotNull(bayAc);
             Assert.Equal("102", bayAc.Attributes!["TYPE"]!.Value);
             Assert.Equal("0", bayAc.SelectSingleNode("FillPattern")!.InnerText);
@@ -207,13 +214,20 @@ public sealed class CliE2ETests
             Assert.Equal("0", picture.SelectSingleNode("Type")!.InnerText);
             Assert.Equal("FALSE", picture.SelectSingleNode("SizeFromTemplate")!.InnerText);
 
-            // Validate ST1 positive pole DC busbar is present (Busbar line TYPE=101, lineWidth=5, ALCUseColor=TRUE)
+            // Validate ST1 positive pole DC busbar is present (Busbar line TYPE=101, lineWidth=5 or 6, ALCUseColor=TRUE)
             var dcPosBus = doc.DocumentElement!.SelectSingleNode(
                 "//*[@TYPE='101' and ALCUseColor]");
             Assert.NotNull(dcPosBus);
 
-            // Validate first frame element is transparent rectangle (ST1 AC YARD frame)
-            var firstRect = doc.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
+            // Validate Canvas background is Elements_0
+            var canvasBg = doc.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
+            Assert.NotNull(canvasBg);
+            Assert.Equal("102", canvasBg.Attributes!["TYPE"]!.Value);
+            Assert.Equal("1", canvasBg.SelectSingleNode("FillPattern")!.InnerText);
+            Assert.Equal("100", canvasBg.SelectSingleNode("AlphaBackColor")!.InnerText);
+
+            // Validate first frame element is transparent rectangle (Elements_1: ST1 AC YARD frame)
+            var firstRect = doc.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_1");
             Assert.NotNull(firstRect);
             Assert.Equal("102", firstRect.Attributes!["TYPE"]!.Value);
             Assert.Equal("0", firstRect.SelectSingleNode("FillPattern")!.InnerText);
@@ -229,9 +243,9 @@ public sealed class CliE2ETests
             Assert.NotNull(circles);
             Assert.True(circles.Count > 0, "Expected TYPE=103 circles from Transformer/EarthSwitch vector rendering.");
 
-            // Validate that filled vector rectangles (TYPE=102, FillPattern=8) exist (CB/MMC)
+            // Validate that filled vector rectangles (TYPE=102, FillPattern=1) exist (CB/MMC)
             var cbRects = doc.DocumentElement!.SelectNodes(
-                "Apartment/Picture/*[@TYPE='102' and FillPattern[text()='8']]");
+                "Apartment/Picture/*[@TYPE='102' and FillPattern[text()='1']]");
             Assert.NotNull(cbRects);
             Assert.True(cbRects.Count > 0, "Expected filled TYPE=102 rectangles from CB/MMC vector rendering.");
         }

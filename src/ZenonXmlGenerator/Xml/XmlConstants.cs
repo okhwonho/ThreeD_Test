@@ -24,8 +24,8 @@ public static class XmlConstants
     /// <summary>Picture 기본 타입 값 (Standard 화면 = 0, Ground Truth)</summary>
     public const string PictureType = "0";
 
-    /// <summary>Picture 기본 배경색 (zenon 시스템 색상 DWORD)</summary>
-    public const string PictureBackgroundColor = "80000037";
+    /// <summary>Picture 기본 배경색 (zenon BGR COLORREF: #07101C -> 1C1007)</summary>
+    public const string PictureBackgroundColor = "1C1007";
 
     /// <summary>Picture 기본 템플릿(프레임) 이름</summary>
     public const string PictureDefaultTemplate = "MAIN";
@@ -151,6 +151,9 @@ public static class XmlConstants
     /// <summary>Transformer 각 원 반지름 = 22</summary>
     public const int TRCircleRadius         = 22;
 
-    /// <summary>차단기 FillPattern = 8 (채움)</summary>
-    public const int FillPatternSolid       = 8;
+    /// <summary>완전 투명 FillPattern = 0</summary>
+    public const int FillPatternHollow      = 0;
+
+    /// <summary>단색 채움 FillPattern = 1 (Solid Fill)</summary>
+    public const int FillPatternSolid       = 1;
 }

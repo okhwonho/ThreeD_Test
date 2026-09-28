@@ -131,7 +131,7 @@ public sealed class RootNodeTests
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
         var bg = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/BackgroundColor")!.InnerText;
-        Assert.Equal("80000037", bg);
+        Assert.Equal("1C1007", bg);
     }
 
     [Fact]
@@ -148,7 +148,8 @@ public sealed class RootNodeTests
     public void RectangleElement_OutputsTransparentAttributes()
     {
         var xml = LoadXml(new ZenonXmlGenerator().GenerateFromJson(SampleJson));
-        var rect = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_0");
+        // Elements_0 is CANVAS_BG, Elements_1 is the user rectangle (R001)
+        var rect = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_1");
         Assert.NotNull(rect);
         Assert.Equal("102", rect.Attributes!["TYPE"]!.Value);
         Assert.Equal("0", rect.SelectSingleNode("FillPattern")!.InnerText);

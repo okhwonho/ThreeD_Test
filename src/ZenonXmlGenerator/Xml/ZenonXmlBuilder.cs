@@ -132,9 +132,27 @@ public sealed class ZenonXmlBuilder
         var labeled  = InjectTagLabels(routed);
         var elements = VectorSymbolRenderer.Expand(labeled);
 
+        // ─── 다크 캔버스 전체 배경 사각형 (Elements_0) ───────────────────
+        var canvasBg = new RectangleElement
+        {
+            Id          = "CANVAS_BG",
+            X           = 0,
+            Y           = 0,
+            Width       = doc.Width,
+            Height      = doc.Height,
+            LineWidth   = 0,
+            FillPattern = XmlConstants.FillPatternSolid, // 1
+            FillColor   = XmlConstants.ColorCanvasBg,    // #07101C (BGR: 1C1007)
+            BorderColor = XmlConstants.ColorCanvasBg,
+            AlphaBackColor = 100,
+        };
+
+        var finalElements = new List<TopologyElement>(elements.Count + 1) { canvasBg };
+        finalElements.AddRange(elements);
+
         // <Elements_0 NODE="zenOn(R) embedded object" TYPE="…"> … </Elements_0>
         int index = 0;
-        foreach (var element in elements)
+        foreach (var element in finalElements)
         {
             if (_writers.TryGetValue(element.GetType(), out var writer))
             {

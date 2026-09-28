@@ -9,18 +9,7 @@ namespace ZenonXmlGenerator.Tests;
 
 /// <summary>
 /// Symbol 요소의 자체 완결형 벡터 렌더링(VectorSymbolRenderer) 검증.
-///
-/// 변경 내역:
-///   이전: TYPE=16(library symbol), DynEleVar_0, States_n 구조 검증
-///   현재: VectorSymbolRenderer가 SymbolElement → 벡터 프리미티브(Rectangle/Circle/Line)로 분해
-///
-/// 검증 전략:
-///   - 출력에 TYPE=16 없음
-///   - CB → TYPE=102 filled rectangle (FillPattern=8)
-///   - DS → TYPE=102 hollow rectangle (FillPattern=0)
-///   - ES → TYPE=103 circle + lines
-///   - TR → 3개 TYPE=103 circles
-///   - SymbolElement.EffectiveALCType 모델 속성은 유지
+/// 2D 플랫 SCADA 규격 (FillPattern=1 Solid, FillPattern=0 Transparent) 검증.
 /// </summary>
 public sealed class SymbolBindingTests
 {
@@ -39,9 +28,6 @@ public sealed class SymbolBindingTests
         return doc;
     }
 
-    private static XmlNodeList GetPictureChildren(XmlDocument doc) =>
-        doc.DocumentElement!.SelectNodes("Apartment/Picture/*[@TYPE]")!;
-
     // ─── VectorSymbolRenderer: TYPE=16 없음 검증 ────────────────────────
 
     [Fact]
@@ -57,7 +43,7 @@ public sealed class SymbolBindingTests
         Assert.Equal(0, type16.Count);
     }
 
-    // ─── CircuitBreaker → 녹색 채움 사각형 (TYPE=102, FillPattern=8) ───
+    // ─── CircuitBreaker → 녹색 채움 사각형 (TYPE=102, FillPattern=1) ───
 
     [Fact]
     public void Symbol_CircuitBreaker_RenderedAsFilledRectangle()
@@ -68,11 +54,12 @@ public sealed class SymbolBindingTests
             CenterX = 200, CenterY = 300, LibrarySymbolName = "CB_Open",
         };
         var xml     = BuildWithSymbol(sym);
-        var body    = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/*[@TYPE='102']");
+        // Elements_0 is CANVAS_BG, CB body is the 32x32 rectangle
+        var body    = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/*[@TYPE='102' and Width[text()='32']]");
         Assert.NotNull(body);
 
         var fp = body.SelectSingleNode("FillPattern")?.InnerText;
-        Assert.Equal("8", fp);
+        Assert.Equal("1", fp);
     }
 
     [Fact]
@@ -84,7 +71,7 @@ public sealed class SymbolBindingTests
             CenterX = 200, CenterY = 300, LibrarySymbolName = "CB_Open",
         };
         var xml  = BuildWithSymbol(sym);
-        var body = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/*[@TYPE='102']");
+        var body = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/*[@TYPE='102' and Width[text()='32']]");
         Assert.NotNull(body);
         Assert.Equal("32", body.SelectSingleNode("Width")!.InnerText);
         Assert.Equal("32", body.SelectSingleNode("Height")!.InnerText);
@@ -100,7 +87,7 @@ public sealed class SymbolBindingTests
             CenterX = 200, CenterY = 300, LibrarySymbolName = "CB_Open",
         };
         var xml  = BuildWithSymbol(sym);
-        var body = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/*[@TYPE='102']");
+        var body = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/*[@TYPE='102' and Width[text()='32']]");
         Assert.NotNull(body);
         Assert.Equal("184", body.SelectSingleNode("StartX")!.InnerText);
         Assert.Equal("284", body.SelectSingleNode("StartY")!.InnerText);
@@ -117,9 +104,9 @@ public sealed class SymbolBindingTests
             CenterX = 150, CenterY = 250, LibrarySymbolName = "DS_Open",
         };
         var xml  = BuildWithSymbol(sym);
-        // First TYPE=102 element should be hollow DS (FillPattern=0)
+        // TYPE=102 element with Width=24 and FillPattern=0
         var body = xml.DocumentElement!.SelectSingleNode(
-            "Apartment/Picture/*[@TYPE='102' and FillPattern[text()='0']]");
+            "Apartment/Picture/*[@TYPE='102' and FillPattern[text()='0'] and Width[text()='24']]");
         Assert.NotNull(body);
         Assert.Equal("24", body.SelectSingleNode("Width")!.InnerText);
         Assert.Equal("24", body.SelectSingleNode("Height")!.InnerText);

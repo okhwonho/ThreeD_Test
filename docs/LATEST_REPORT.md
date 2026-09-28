@@ -1,86 +1,76 @@
 # Latest Execution Report
 
-> **작업 일시:** 2026-09-28 14:22 KST  
-> **마일스톤:** 자체 완결형 벡터 렌더러(VectorSymbolRenderer) 구축 — 외부 심볼 라이브러리 의존 완전 제거, 다크 테마 HVDC SLD
+> **작업 일시:** 2026-09-28 15:33 KST  
+> **마일스톤:** zenon 15 줄무늬 해치 패턴 제거 및 2D 플랫 SCADA 규격 교정 (다크 캔버스 배경 보장)
 
 ---
 
 ## 1. 개요 (Summary)
 
-### 1.1 자체 완결형 벡터 렌더러 (Self-Contained Vector Renderer)
-- **`src/.../Xml/VectorSymbolRenderer.cs` [신규]:**
-  - 외부 심볼 라이브러리(TYPE=16) 의존을 완전 제거.
-  - 각 SymbolElement를 zenon 기본 도형(Rectangle/Circle/Line/Text)으로 분해:
-    - `CircuitBreaker` → TYPE=102 Rectangle, 32×32, FillPattern=8, 채움 #00C853 (녹색)
-    - `Disconnector` → TYPE=102 Rectangle, 24×24, FillPattern=0(빈 사각형) + 대각 블레이드 Line
-    - `EarthSwitch` → TYPE=103 Circle(d=24) + 수직 인출선 + 접지 사다리 3단(⏚)
-    - `Transformer(Y-Y-Δ)` → 3×TYPE=103 Circle(r=22) 삼각 배치 + Y/Y/Δ 텍스트
-    - `CurrentTransformer` → TYPE=102 Rectangle(20×20) + "CT" 텍스트
-    - `PotentialTransformer` → TYPE=102 Rectangle(20×20) + "PT" 텍스트
-    - Default → TYPE=102 Rectangle(28×28, 채움)
-- **`ZenonXmlBuilder.WritePicture` 파이프라인 확장:**
-  - `OrthogonalRouter.Route()` → `InjectTagLabels()` → **`VectorSymbolRenderer.Expand()`** → Write
-  - SymbolWriter(TYPE=16) 레지스트리에서 제거, CircleWriter(TYPE=103) 추가
+### 1.1 FillPattern 수정 (줄무늬 버그 해결)
+- **원인:** zenon XML에서 `FillPattern="8"`은 수평 줄무늬(Horizontal Hatch) 패턴으로 렌더링되어 메탈릭/줄무늬 아티팩트 발생.
+- **수정:**
+  - **완전 투명 (Bay 구역 박스, 텍스트 박스, 변압기 권선 등):**
+    - `FillPattern="0"`
+    - `AlphaBackColor="0"`
+    - `Transparent="TRUE"`
+  - **단색 채움 (Solid Fill - 차단기, 접지기, 계측 카드 배경, 전체 캔버스 배경):**
+    - `FillPattern="1"`
+    - `AlphaBackColor="100"`
+    - `Transparent="FALSE"`
+    - 3D/그라데이션 방지: `Lightning="0"`, `LightIntensity="0"`, `GradientDirection="0"`, `Brightness="FALSE"`
 
-### 1.2 TYPE=103 원(Ellipse/Circle) 지원
-- **`CircleElement.cs` [신규]:** CenterX/Y, Radius, FillColor, BorderColor, FillPattern
-- **`CircleWriter.cs` [신규]:** zenon TYPE=103 XML 출력 (StartX/Y=CenterXY-r, Width/Height=r×2)
+### 1.2 다크 캔버스 배경 보장 (`Elements_0`)
+- Picture 속성 외에도 XML 그리기 최우선 인덱스(`Elements_0`)에 전체 캔버스 배경 사각형을 명시적으로 자동 삽입:
+  - `StartX="0"`, `StartY="0"`, `Width=doc.Width(3840)`, `Height=doc.Height(1200)`
+  - `FillPattern="1"`, `BackColor="1C1007"` (다크 네이비 `#07101C`), `AlphaBackColor="100"`, `LineWidth="0"`
+  - `Picture/@BackgroundColor="1C1007"` 설정 일치화
 
-### 1.3 다크 테마 전력 팔레트 (XmlConstants.cs)
-| 상수 | 값 (#RRGGBB) | 용도 |
-|------|-------------|------|
-| `ColorCanvasBg` | `#07101C` | 캔버스 배경 |
-| `ColorCardBg` | `#0D1B2A` | 카드/패널 배경 |
-| `ColorCardBorder` | `#1E88E5` | 카드 테두리 |
-| `ColorBusbar` | `#E53935` | AC 345kV 모선 |
-| `ColorDcLine` | `#00E676` | DC -Pole 선로 |
-| `ColorDmrLine` | `#00B0FF` | DMR 중성선 |
-| `ColorSymbolFill` | `#00C853` | 기기 심볼 채움 |
-| `ColorWire` | `#B0BEC5` | 일반 연결선 |
-| `ColorTextPrimary` | `#FFFFFF` | 주 텍스트 |
-| `ColorTextSecondary` | `#90CAF9` | 보조 텍스트 |
-| `ColorFrameBorder` | `#2E4057` | 구역 프레임 |
+### 1.3 심볼 2D 플랫화 (`VectorSymbolRenderer.cs`)
+- **CircuitBreaker (차단기):**
+  - TYPE="102" (Rectangle), 32×32, `FillPattern="1"`, `BackColor="53C800"` (녹색 `#00C853`)
+  - `LineWidth="1"`, `LineColorEx="FFFFFF"` (흰색 얇은 테두리)
+  - 3D/그라데이션 태그 비활성화
+- **EarthSwitch (접지기):**
+  - TYPE="103" (Circle), 지름 24, `FillPattern="1"`, `BackColor="53C800"`, `LineWidth="1"`, 테두리 흰색
+  - 접지 사다리선 `Color="#00E676"` (`LineColorEx="76E600"`, 형광 녹색), `LineWidth="2"`
+- **Disconnector (단로기):**
+  - TYPE="102" (Rectangle), 24×24, `FillPattern="0"` (투명), 테두리 흰색
+  - 스위치 날 `LineWidth="3"`, `Color="#00E676"` (`LineColorEx="76E600"`, 형광 녹색)
+- **Transformer (변압기 - Y-Y-Δ):**
+  - 3개 원환 TYPE="103", `FillPattern="0"`, 외곽선 `LineWidth="3"`, `BorderColor="#00E676"` (형광 녹색)
+  - 내부 'Y', 'Y', 'Δ' 텍스트: 백색 `#FFFFFF` 렌더링
 
-### 1.4 hvdc_full_system_topology.json 전면 재작성 (3840×1200, 다크 테마)
-- 캔버스: 3840×1200, `sizeFromTemplate: "FALSE"`
-- **ST1 수직 모선:** x=180(BUS#1), x=300(BUS#2), y=200~950, lineWidth=14, #E53935
-- **ST2 수직 모선:** x=3560(BUS#2), x=3680(BUS#1), y=200~950, lineWidth=14, #E53935
-- **DC Positive Pole:** y=220 수평, lineWidth=6, #E53935
-- **DC DMR 중성선:** y=600 수평, lineWidth=6, #00B0FF
-- **DC Negative Pole:** y=970 수평, lineWidth=6, #00E676
-- **중앙 DIRECTION 계측 블록:** x=1780, y=520, 280×160, FillColor=#0D1B2A
-- 기기: ST1/ST2 00CB, 71CB, 72CB, DS1/DS2, TR-1(Y-Y-Δ), MMC(+)/(-), 접지기군(P1/P2 ES, N1/N2 ES, PLD DS)
-
-### 1.5 테스트 현대화
-- `SldTopologyTests.cs`: TYPE=16 제거, 벡터 렌더링 검증(TYPE=102/103 존재)
-- `SymbolBindingTests.cs`: DynEleVar/States 구조 → 벡터 형상(CB 채움 사각형, DS 빈 사각형, ES 원, TR 3원) 검증
-- `CliE2ETests.cs`: DynEleVar → TYPE=103 원/TYPE=102 채움 사각형 존재 검증
+### 1.4 산출물 갱신
+- `output_hvdc_full_system.xml` — **189,456 bytes** (UTF-16 LE BOM, 2D 플랫 규격 적용)
 
 ---
 
 ## 2. 세부 변경 파일 목록
 | 파일 | 변경 유형 | 주요 내용 |
 |------|-----------|-----------|
-| `src/.../Xml/XmlConstants.cs` | 수정 | 다크 테마 팔레트 + 벡터 렌더러 치수 상수 추가 |
-| `src/.../Models/CircleElement.cs` | **신규** | TYPE=103 Ellipse 내부 렌더링 모델 |
-| `src/.../ElementWriters/CircleWriter.cs` | **신규** | TYPE=103 XML 출력 |
-| `src/.../Xml/VectorSymbolRenderer.cs` | **신규** | SymbolElement → 벡터 프리미티브 분해 렌더러 |
-| `src/.../Xml/ZenonXmlBuilder.cs` | 수정 | CircleWriter 등록, SymbolWriter 제거, VectorSymbolRenderer 파이프라인 |
-| `tests/.../SymbolBindingTests.cs` | 전면 재작성 | 벡터 렌더링 행동 검증 (11개 테스트) |
-| `tests/.../SldTopologyTests.cs` | 전면 재작성 | 벡터 렌더링 검증 (6개 테스트) |
-| `tests/.../CliE2ETests.cs` | 수정 | DynEleVar → 벡터 도형 검증으로 교체 |
-| `tests/.../Samples/hvdc_full_system_topology.json` | 전면 재작성 | 3840×1200 다크 테마 전체 HVDC 바이폴 |
-| `output_hvdc_full_system.xml` | 재생성 | 169,438 bytes, UTF-16 LE BOM |
+| `src/.../Xml/XmlConstants.cs` | 수정 | `FillPatternSolid = 1`, `FillPatternHollow = 0`, `PictureBackgroundColor = "1C1007"` |
+| `src/.../Xml/ElementWriters/RectangleWriter.cs` | 수정 | 2D 플랫 SCADA 규격: FillPattern 0 vs 1 분기, 3D 비활성화 태그 출력 |
+| `src/.../Xml/ElementWriters/CircleWriter.cs` | 수정 | 2D 플랫 SCADA 규격: FillPattern 0 vs 1 분기, 3D 비활성화 태그 출력 |
+| `src/.../Xml/VectorSymbolRenderer.cs` | 수정 | CB/DS/ES/TR 2D 플랫화, 형광녹색 접지선/스위치날/변압기 권선 테두리 |
+| `src/.../Xml/ZenonXmlBuilder.cs` | 수정 | `Elements_0`에 전체 캔버스 배경 사각형(CANVAS_BG) 자동 삽입 파이프라인 |
+| `tests/.../Samples/hvdc_full_system_topology.json` | 수정 | `fillPattern: 8` -> `fillPattern: 1` 교정 |
+| `tests/.../SldTopologyTests.cs` | 수정 | CanvasBackground(`Elements_0`) 검증 및 FillPattern=1 어설션 갱신 |
+| `tests/.../SymbolBindingTests.cs` | 수정 | 2D 플랫 SCADA 및 CanvasBackground 구조 대응 어설션 갱신 |
+| `tests/.../LineCoordinateTests.cs` | 수정 | `Elements_0` CanvasBackground 추가에 따른 인덱스 오프셋 갱신 |
+| `tests/.../RootNodeTests.cs` | 수정 | `BackgroundColor` 1C1007 및 직사각형 투명성 어설션 갱신 |
+| `tests/.../CliE2ETests.cs` | 수정 | CanvasBackground 및 FillPattern=1 어설션 갱신 |
+| `output_hvdc_full_system.xml` | 재생성 | 189,456 bytes, UTF-16 LE BOM |
 
 ---
 
 ## 3. 검증 결과 (Validation Results)
 - **빌드 (`dotnet build`):** 성공 (경고 0, 오류 0)
 - **단위 및 E2E 테스트 (`dotnet test`):**
-  - 총 테스트 수: **72개** (기존 67 + VectorSymbolRenderer/CircleWriter 신규 5)
-  - 통과: **72개**
+  - 총 테스트 수: **74개**
+  - 통과: **74개**
   - 실패: **0개**
-  - 실행 시간: **58 ms**
+  - 실행 시간: **55 ms**
 
 ---
 

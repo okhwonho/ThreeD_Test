@@ -8,18 +8,18 @@ namespace ZenonXmlGenerator.Xml;
 /// 자체 완결형 벡터 렌더러 (Self-Contained Vector Renderer).
 ///
 /// 외부 심볼 라이브러리(TYPE=16) 의존을 완전히 제거하고,
-/// 각 SymbolElement를 zenon 기본 도형(Rectangle/Circle/Line/Text)으로 분해한다.
+/// 각 SymbolElement를 2D 플랫 SCADA 규격(Rectangle/Circle/Line/Text)으로 분해한다.
 ///
 /// 기기 유형별 렌더링 규칙:
-/// ┌────────────────────────────────────────────────────────────────┐
-/// │ CircuitBreaker   → Rectangle(32×32, FillPattern=8, 녹색)       │
-/// │ Disconnector     → Rectangle(24×24, FillPattern=0, 흰색 테두리)│
-/// │ EarthSwitch      → Circle(d=24, 녹색) + 수직 인출선 + 접지⏚    │
-/// │ Transformer(Y-Δ) → 3×Circle(r=22) 삼각 배치 + Y/Y/Δ 텍스트   │
-/// │ CurrentTransformer → Rectangle(20×20) + "CT" 텍스트            │
-/// │ PotentialTransformer → Rectangle(20×20) + "PT" 텍스트          │
-/// │ Default          → Rectangle(28×28, FillPattern=8, 녹색)       │
-/// └────────────────────────────────────────────────────────────────┘
+/// ┌────────────────────────────────────────────────────────────────────────┐
+/// │ CircuitBreaker   → Rectangle(32×32, FillPattern=1, 녹색, 테두리 흰색 1px)│
+/// │ Disconnector     → Rectangle(24×24, FillPattern=0) + 스위치날(3px, 형광녹색)│
+/// │ EarthSwitch      → Circle(d=24, FillPattern=1, 녹색) + 접지사다리(형광녹색)  │
+/// │ Transformer(Y-Δ) → 3×Circle(r=22, FillPattern=0, 형광녹색 3px) + Y/Y/Δ 텍스트│
+/// │ CurrentTransformer → Rectangle(20×20, FillPattern=1) + "CT" 텍스트     │
+/// │ PotentialTransformer → Rectangle(20×20, FillPattern=1) + "PT" 텍스트   │
+/// │ Default          → Rectangle(28×28, FillPattern=1, 녹색)              │
+/// └────────────────────────────────────────────────────────────────────────┘
 /// </summary>
 public static class VectorSymbolRenderer
 {
@@ -49,17 +49,17 @@ public static class VectorSymbolRenderer
 
         return sym.DeviceType switch
         {
-            DeviceType.CircuitBreaker    => RenderCircuitBreaker(sym, cx, cy),
-            DeviceType.Disconnector      => RenderDisconnector(sym, cx, cy),
-            DeviceType.EarthSwitch       => RenderEarthSwitch(sym, cx, cy),
-            DeviceType.Transformer       => RenderTransformer(sym, cx, cy),
-            DeviceType.CurrentTransformer  => RenderCT(sym, cx, cy),
+            DeviceType.CircuitBreaker       => RenderCircuitBreaker(sym, cx, cy),
+            DeviceType.Disconnector         => RenderDisconnector(sym, cx, cy),
+            DeviceType.EarthSwitch          => RenderEarthSwitch(sym, cx, cy),
+            DeviceType.Transformer          => RenderTransformer(sym, cx, cy),
+            DeviceType.CurrentTransformer   => RenderCT(sym, cx, cy),
             DeviceType.PotentialTransformer => RenderPT(sym, cx, cy),
             _ => RenderDefault(sym, cx, cy),
         };
     }
 
-    // ─── CircuitBreaker: 녹색 채움 사각형 (32×32) ────────────────────────
+    // ─── CircuitBreaker: 녹색 채움 사각형 (32×32, 테두리 흰색 1px) ────────
     private static List<TopologyElement> RenderCircuitBreaker(SymbolElement sym, int cx, int cy)
     {
         int w = XmlConstants.SymbolSizeCB; // 32
@@ -73,15 +73,15 @@ public static class VectorSymbolRenderer
                 Y           = cy - h / 2,
                 Width       = w,
                 Height      = h,
-                FillPattern = XmlConstants.FillPatternSolid,
-                FillColor   = XmlConstants.ColorSymbolFill,
-                BorderColor = XmlConstants.ColorSymbolBorder,
-                LineWidth   = 2,
+                FillPattern = XmlConstants.FillPatternSolid, // 1
+                FillColor   = XmlConstants.ColorSymbolFill,  // #00C853
+                BorderColor = XmlConstants.ColorSymbolBorder,// #FFFFFF
+                LineWidth   = 1,
             },
         ];
     }
 
-    // ─── Disconnector: 빈 사각형 테두리 (24×24) ──────────────────────────
+    // ─── Disconnector: 빈 사각형 테두리 (24×24) + 스위치날(3px 형광녹색) ─
     private static List<TopologyElement> RenderDisconnector(SymbolElement sym, int cx, int cy)
     {
         int w = XmlConstants.SymbolSizeDS; // 24
@@ -95,14 +95,14 @@ public static class VectorSymbolRenderer
                 Y           = cy - h / 2,
                 Width       = w,
                 Height      = h,
-                FillPattern = 0,             // 빈 사각형
+                FillPattern = XmlConstants.FillPatternHollow, // 0
                 AlphaBackColor = 0,
-                BorderColor = XmlConstants.ColorSymbolBorder,
+                BorderColor = XmlConstants.ColorSymbolBorder, // #FFFFFF
                 LineWidth   = 2,
             },
         };
 
-        // 내부 대각선(블레이드 표시): 좌상 → 우하
+        // 내부 대각선(스위치 날): 3px, 형광 녹색 (#00E676)
         elems.Add(new LineElement
         {
             Id        = sym.Id + "_BLADE",
@@ -110,37 +110,37 @@ public static class VectorSymbolRenderer
             Y1        = cy - h / 2 + 4,
             X2        = cx + w / 2 - 4,
             Y2        = cy + h / 2 - 4,
-            Color     = XmlConstants.ColorSymbolBorder,
-            LineWidth = 1,
+            Color     = XmlConstants.ColorDcLine, // #00E676
+            LineWidth = 3,
         });
 
         return elems;
     }
 
-    // ─── EarthSwitch: 녹색 원 + 수직 인출선 + 접지 사다리(⏚) ───────────
+    // ─── EarthSwitch: 녹색 원 + 수직 인출선 + 접지 사다리(⏚ 형광녹색) ───
     private static List<TopologyElement> RenderEarthSwitch(SymbolElement sym, int cx, int cy)
     {
-        int r      = XmlConstants.ESCircleRadius;   // 12
-        int lead   = XmlConstants.ESLeadLength;      // 30
+        int r      = XmlConstants.ESCircleRadius;   // 12 (지름 24)
+        int lead   = XmlConstants.ESLeadLength;     // 30
 
-        // 접지 연결점 (원 하단)
         int botY   = cy + r;
         int gndTop = botY + lead;
 
         var elems = new List<TopologyElement>
         {
-            // ① 녹색 채움 원
+            // ① 녹색 채움 원 (지름 24, FillPattern=1, 테두리 1px)
             new CircleElement
             {
                 Id          = sym.Id + "_CIRCLE",
                 CenterX     = cx,
                 CenterY     = cy,
                 Radius      = r,
-                FillColor   = XmlConstants.ColorSymbolFill,
-                BorderColor = XmlConstants.ColorSymbolBorder,
-                FillPattern = XmlConstants.FillPatternSolid,
+                FillColor   = XmlConstants.ColorSymbolFill,   // #00C853
+                BorderColor = XmlConstants.ColorSymbolBorder, // #FFFFFF
+                FillPattern = XmlConstants.FillPatternSolid,  // 1
+                LineWidth   = 1,
             },
-            // ② 수직 인출선
+            // ② 수직 인출선 (형광 녹색 2px)
             new LineElement
             {
                 Id        = sym.Id + "_LEAD",
@@ -148,18 +148,18 @@ public static class VectorSymbolRenderer
                 Y1        = botY,
                 X2        = cx,
                 Y2        = gndTop,
-                Color     = XmlConstants.ColorWire,
+                Color     = XmlConstants.ColorDcLine, // #00E676
                 LineWidth = 2,
             },
-            // ③ 접지 사다리 3단 (⏚)
-            new LineElement { Id = sym.Id + "_G1", X1 = cx - 14, Y1 = gndTop,     X2 = cx + 14, Y2 = gndTop,     Color = XmlConstants.ColorWire, LineWidth = 2 },
-            new LineElement { Id = sym.Id + "_G2", X1 = cx - 9,  Y1 = gndTop + 6, X2 = cx + 9,  Y2 = gndTop + 6, Color = XmlConstants.ColorWire, LineWidth = 2 },
-            new LineElement { Id = sym.Id + "_G3", X1 = cx - 4,  Y1 = gndTop + 12,X2 = cx + 4,  Y2 = gndTop + 12,Color = XmlConstants.ColorWire, LineWidth = 2 },
+            // ③ 접지 사다리 3단 (⏚ 형광 녹색 2px)
+            new LineElement { Id = sym.Id + "_G1", X1 = cx - 14, Y1 = gndTop,     X2 = cx + 14, Y2 = gndTop,     Color = XmlConstants.ColorDcLine, LineWidth = 2 },
+            new LineElement { Id = sym.Id + "_G2", X1 = cx - 9,  Y1 = gndTop + 6, X2 = cx + 9,  Y2 = gndTop + 6, Color = XmlConstants.ColorDcLine, LineWidth = 2 },
+            new LineElement { Id = sym.Id + "_G3", X1 = cx - 4,  Y1 = gndTop + 12,X2 = cx + 4,  Y2 = gndTop + 12,Color = XmlConstants.ColorDcLine, LineWidth = 2 },
         };
         return elems;
     }
 
-    // ─── Transformer Y-Y-Δ: 3개 원 삼각 배치 + 기호 텍스트 ──────────────
+    // ─── Transformer Y-Y-Δ: 3개 원환(형광녹색 3px, 투명) + 기호 텍스트 ──
     private static List<TopologyElement> RenderTransformer(SymbolElement sym, int cx, int cy)
     {
         int r = XmlConstants.TRCircleRadius; // 22
@@ -181,12 +181,12 @@ public static class VectorSymbolRenderer
                 CenterX     = wcx,
                 CenterY     = wcy,
                 Radius      = r,
-                FillPattern = 0,                           // 빈 원 (권선 표시)
-                BorderColor = XmlConstants.ColorBusbar,   // 적색 테두리
+                FillPattern = XmlConstants.FillPatternHollow, // 0 (내부 투명)
+                BorderColor = XmlConstants.ColorDcLine,       // #00E676 (형광 녹색 외곽선)
                 LineWidth   = 3,
             });
 
-            // 권선 기호 텍스트 (Y/Y/Δ)
+            // 권선 기호 텍스트 (Y/Y/Δ, 백색)
             elems.Add(new TextElement
             {
                 Id       = sym.Id + "_" + label + "_TXT",
@@ -194,7 +194,7 @@ public static class VectorSymbolRenderer
                 Y        = wcy - 7,
                 Text     = label,
                 FontSize = 11,
-                Color    = XmlConstants.ColorTextPrimary,
+                Color    = XmlConstants.ColorTextPrimary, // #FFFFFF
             });
         }
         return elems;
@@ -213,7 +213,7 @@ public static class VectorSymbolRenderer
                 Y           = cy - h / 2,
                 Width       = w,
                 Height      = h,
-                FillPattern = XmlConstants.FillPatternSolid,
+                FillPattern = XmlConstants.FillPatternSolid, // 1
                 FillColor   = XmlConstants.ColorDmrLine,
                 BorderColor = XmlConstants.ColorSymbolBorder,
                 LineWidth   = 1,
@@ -243,7 +243,7 @@ public static class VectorSymbolRenderer
                 Y           = cy - h / 2,
                 Width       = w,
                 Height      = h,
-                FillPattern = XmlConstants.FillPatternSolid,
+                FillPattern = XmlConstants.FillPatternSolid, // 1
                 FillColor   = XmlConstants.ColorDmrLine,
                 BorderColor = XmlConstants.ColorSymbolBorder,
                 LineWidth   = 1,
@@ -273,10 +273,10 @@ public static class VectorSymbolRenderer
                 Y           = cy - w / 2,
                 Width       = w,
                 Height      = w,
-                FillPattern = XmlConstants.FillPatternSolid,
+                FillPattern = XmlConstants.FillPatternSolid, // 1
                 FillColor   = XmlConstants.ColorSymbolFill,
                 BorderColor = XmlConstants.ColorSymbolBorder,
-                LineWidth   = 2,
+                LineWidth   = 1,
             },
         ];
     }
