@@ -5,10 +5,8 @@ namespace ZenonXmlGenerator.Xml.ElementWriters;
 
 /// <summary>
 /// 선(Line) 요소를 zenon XML로 출력한다. TYPE="101"
-/// Ground Truth 좌표 규칙:
-///   StartX = x1, StartY = y1
-///   Width  = x2 - x1  (Dx)
-///   Height = y2 - y1  (Dy, 수직 상향선이면 음수)
+/// 다크 테마에서 검은색 선이 묻히지 않도록 검은색(#000000)인 경우 백색(#FFFFFF)으로 자동 보정하며,
+/// zenon 15 필수 속성인 LineColorEx를 반드시 출력한다.
 /// </summary>
 public sealed class LineWriter : IElementWriter
 {
@@ -24,8 +22,16 @@ public sealed class LineWriter : IElementWriter
         writer.WriteElementString("StartY",    line.StartY.ToString());
         writer.WriteElementString("Width",     line.Dx.ToString());
         writer.WriteElementString("Height",    line.Dy.ToString());
-        writer.WriteElementString("ForeColor", ColorConverter.ToColorRefString(line.Color));
-        writer.WriteElementString("LineWidth", line.EffectiveLineWidth.ToString());
+
+        // 다크 테마 가독성 보장: 검은색(#000000) 또는 빈 색상은 백색(#FFFFFF)으로 강제 보정
+        var effectiveColor = string.IsNullOrWhiteSpace(line.Color) || line.Color.TrimStart('#').Equals("000000", System.StringComparison.OrdinalIgnoreCase)
+            ? XmlConstants.ColorTextPrimary // #FFFFFF
+            : line.Color;
+
+        var cleanColor = effectiveColor.TrimStart('#');
+        writer.WriteElementString("ForeColor",   ColorConverter.ToColorRefString(effectiveColor));
+        writer.WriteElementString("LineColorEx", cleanColor);
+        writer.WriteElementString("LineWidth",   line.EffectiveLineWidth.ToString());
 
         if (!string.IsNullOrWhiteSpace(line.ALCUseColor))
         {

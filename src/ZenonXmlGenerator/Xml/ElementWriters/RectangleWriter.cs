@@ -6,12 +6,11 @@ namespace ZenonXmlGenerator.Xml.ElementWriters;
 /// <summary>
 /// 사각형(Rectangle) 요소를 zenon XML로 출력한다. TYPE="102"
 ///
-/// zenon 15 Ground Truth 구조:
+/// zenon 15 Strict XML 규격:
 /// - 투명 구역 (Bay Frame, 투명 박스):
-///   AlphaBackColor="0", Transparent="TRUE", BackColor="0"
+///   FillPattern="0", Transparent="TRUE", BackColor="0", AlphaBackColor="0", LineColorEx
 /// - 단색 채움 (CircuitBreaker, 계측 패널 등):
-///   AlphaBackColor="255", Transparent="FALSE", BackColor/FillColor/FillColorEx 설정
-/// - FillPattern 태그는 해치(줄무늬) 브러시를 유발하므로 단색/투명 제어 시 생략.
+///   FillPattern="1", Transparent="FALSE", BackColor/FillColor/FillColorEx, AlphaBackColor="255", LineColorEx
 /// </summary>
 public sealed class RectangleWriter : IElementWriter
 {
@@ -29,7 +28,7 @@ public sealed class RectangleWriter : IElementWriter
         writer.WriteElementString("Height",          rect.Height.ToString());
         writer.WriteElementString("LineWidth",       rect.LineWidth.ToString());
 
-        var cleanBorder = rect.BorderColor.TrimStart('#');
+        var cleanBorder = string.IsNullOrWhiteSpace(rect.BorderColor) ? "FFFFFF" : rect.BorderColor.TrimStart('#');
         writer.WriteElementString("ForeColor",       ColorConverter.ToColorRefString(rect.BorderColor));
         writer.WriteElementString("LineColorEx",     cleanBorder);
 
@@ -38,18 +37,22 @@ public sealed class RectangleWriter : IElementWriter
         if (isFilled)
         {
             var fillRef = ColorConverter.ToColorRefString(rect.FillColor!);
+            var cleanFill = rect.FillColor!.TrimStart('#');
+
+            writer.WriteElementString("FillPattern",     "1");
+            writer.WriteElementString("Transparent",     "FALSE");
             writer.WriteElementString("BackColor",       fillRef);
             writer.WriteElementString("FillColor",       fillRef);
-            writer.WriteElementString("FillColorEx",     rect.FillColor!.TrimStart('#'));
+            writer.WriteElementString("FillColorEx",     cleanFill);
             writer.WriteElementString("AlphaBackColor",  "255");
-            writer.WriteElementString("Transparent",     "FALSE");
         }
         else
         {
             // 완전 투명 (Bay Frame 등)
+            writer.WriteElementString("FillPattern",     "0");
+            writer.WriteElementString("Transparent",     "TRUE");
             writer.WriteElementString("BackColor",       "0");
             writer.WriteElementString("AlphaBackColor",  "0");
-            writer.WriteElementString("Transparent",     "TRUE");
         }
 
         writer.WriteEndElement(); // Elements_n
