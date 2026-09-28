@@ -219,15 +219,21 @@ public sealed class CliE2ETests
             Assert.Equal("0", firstRect.SelectSingleNode("FillPattern")!.InnerText);
             Assert.Equal("0", firstRect.SelectSingleNode("AlphaBackColor")!.InnerText);
 
-            // Validate ST1 MMC Pos symbol is present (check DynEleVar binding by variable name)
-            var st1MmcPos = doc.DocumentElement!.SelectSingleNode(
-                "//DynEleVar_0/ProjectVar[text()='ST1.MMC.POS_POLE.Status']/..");
-            Assert.NotNull(st1MmcPos);
+            // Vector renderer: no TYPE=16 library symbols should be present
+            var type16 = doc.DocumentElement!.SelectNodes("Apartment/Picture/*[@TYPE='16']");
+            Assert.NotNull(type16);
+            Assert.Equal(0, type16.Count);
 
-            // Validate ST2 MMC Neg symbol
-            var st2MmcNeg = doc.DocumentElement!.SelectSingleNode(
-                "//DynEleVar_0/ProjectVar[text()='ST2.MMC.NEG_POLE.Status']/..");
-            Assert.NotNull(st2MmcNeg);
+            // Validate that vector circles (TYPE=103, from Transformer/EarthSwitch) exist
+            var circles = doc.DocumentElement!.SelectNodes("Apartment/Picture/*[@TYPE='103']");
+            Assert.NotNull(circles);
+            Assert.True(circles.Count > 0, "Expected TYPE=103 circles from Transformer/EarthSwitch vector rendering.");
+
+            // Validate that filled vector rectangles (TYPE=102, FillPattern=8) exist (CB/MMC)
+            var cbRects = doc.DocumentElement!.SelectNodes(
+                "Apartment/Picture/*[@TYPE='102' and FillPattern[text()='8']]");
+            Assert.NotNull(cbRects);
+            Assert.True(cbRects.Count > 0, "Expected filled TYPE=102 rectangles from CB/MMC vector rendering.");
         }
         finally
         {

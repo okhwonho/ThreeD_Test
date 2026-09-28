@@ -44,7 +44,9 @@ public sealed class ZenonXmlBuilder
             [typeof(LineElement)]      = new LineWriter(),
             [typeof(RectangleElement)] = new RectangleWriter(),
             [typeof(TextElement)]      = new ElementWriters.TextWriter(),
-            [typeof(SymbolElement)]    = new SymbolWriter(),
+            [typeof(CircleElement)]    = new CircleWriter(),
+            // SymbolElement 는 VectorSymbolRenderer에서 프리미티브로 분해 후 처리.
+            // SymbolWriter(TYPE=16) 는 외부 라이브러리 의존이므로 레지스트리에서 제거.
         };
     }
 
@@ -125,9 +127,10 @@ public sealed class ZenonXmlBuilder
         w.WriteElementString("Height",           doc.Height.ToString());
         w.WriteElementString("BackgroundColor",  XmlConstants.PictureBackgroundColor);
 
-        // ─── 파이프라인: OrthogonalRouter → tagLabel 자동 주입 ────────────
+        // ─── 파이프라인: OrthogonalRouter → tagLabel 자동 주입 → 벡터 분해 ──
         var routed   = OrthogonalRouter.Route(doc.Elements);
-        var elements = InjectTagLabels(routed);
+        var labeled  = InjectTagLabels(routed);
+        var elements = VectorSymbolRenderer.Expand(labeled);
 
         // <Elements_0 NODE="zenOn(R) embedded object" TYPE="…"> … </Elements_0>
         int index = 0;

@@ -96,11 +96,61 @@ public static class XmlConstants
 
     // ─── 텍스트 레이블 자동 오프셋 ────────────────────────────────────────
     /// <summary>TagLabel 텍스트를 심볼 중심 Y에서 위로 띄우는 픽셀 오프셋 = 30</summary>
-    public const int TagLabelYOffset = 30;
+    public const int TagLabelYOffset = 35;
 
     /// <summary>TagLabel 텍스트 기본 폰트 크기 = 9</summary>
     public const int TagLabelFontSize = 9;
 
-    /// <summary>TagLabel 텍스트 기본 색상 (짙은 회색)</summary>
-    public const string TagLabelColor = "#444444";
+    /// <summary>TagLabel 텍스트 기본 색상 (밝은 회색, 다크 테마 가독성)</summary>
+    public const string TagLabelColor = "#B0BEC5";
+
+    // ─── 다크 테마 전력 팔레트 (Dark HVDC SLD Theme) ─────────────────────
+    /// <summary>캔버스 배경 #07101C (매우 어두운 남색)</summary>
+    public const string ColorCanvasBg       = "#07101C";
+
+    /// <summary>카드/패널 배경 #0D1B2A (진청색)</summary>
+    public const string ColorCardBg         = "#0D1B2A";
+
+    /// <summary>카드/패널 테두리 #1E88E5 (밝은 청색)</summary>
+    public const string ColorCardBorder     = "#1E88E5";
+
+    /// <summary>AC 345kV 주 모선 적색 #E53935</summary>
+    public const string ColorBusbar         = "#E53935";
+
+    /// <summary>DC +/-525kV 선로 형광 녹색 #00E676</summary>
+    public const string ColorDcLine         = "#00E676";
+
+    /// <summary>DMR 중성선 청록색 #00B0FF</summary>
+    public const string ColorDmrLine        = "#00B0FF";
+
+    /// <summary>기기 심볼 채움 녹색 #00C853</summary>
+    public const string ColorSymbolFill     = "#00C853";
+
+    /// <summary>기기 심볼 테두리 흰색 #FFFFFF</summary>
+    public const string ColorSymbolBorder   = "#FFFFFF";
+
+    /// <summary>일반 연결선 밝은 회색 #B0BEC5</summary>
+    public const string ColorWire           = "#B0BEC5";
+
+    /// <summary>텍스트 기본 흰색 #FFFFFF</summary>
+    public const string ColorTextPrimary    = "#FFFFFF";
+
+    /// <summary>텍스트 보조 연한 청색 #90CAF9</summary>
+    public const string ColorTextSecondary  = "#90CAF9";
+
+    /// <summary>구역 프레임 테두리 어두운 청회색 #2E4057</summary>
+    public const string ColorFrameBorder    = "#2E4057";
+
+    // ─── 벡터 렌더러 도형 치수 ────────────────────────────────────────────
+    /// <summary>EarthSwitch 원 반지름 = 12 (지름 24)</summary>
+    public const int ESCircleRadius         = 12;
+
+    /// <summary>EarthSwitch 접지 인출선 길이 = 30</summary>
+    public const int ESLeadLength           = 30;
+
+    /// <summary>Transformer 각 원 반지름 = 22</summary>
+    public const int TRCircleRadius         = 22;
+
+    /// <summary>차단기 FillPattern = 8 (채움)</summary>
+    public const int FillPatternSolid       = 8;
 }

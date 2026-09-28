@@ -2,11 +2,13 @@ using System.IO;
 using System.Xml;
 using ZenonXmlGenerator;
 using ZenonXmlGenerator.Models;
+using ZenonXmlGenerator.Xml;
 
 namespace ZenonXmlGenerator.Tests;
 
 /// <summary>
-/// 전력 단선도(SLD) 기기 DTO, Topology 확장 및 ALC 속성 검증 테스트.
+/// 전력 단선도(SLD) 기기 DTO, Topology 확장 및 벡터 렌더링 검증 테스트.
+/// VectorSymbolRenderer가 SymbolElement → 벡터 프리미티브로 변환하는 동작을 검증.
 /// </summary>
 public sealed class SldTopologyTests
 {
@@ -32,7 +34,7 @@ public sealed class SldTopologyTests
         Assert.NotNull(picture);
         Assert.Equal("Substation_154kV_SLD", picture.Attributes!["ShortName"]!.Value);
         Assert.Equal("MAIN", picture.SelectSingleNode("Template")!.InnerText);
-        Assert.Equal("0", picture.SelectSingleNode("Type")!.InnerText);
+        Assert.Equal("0",    picture.SelectSingleNode("Type")!.InnerText);
         Assert.Equal("TRUE", picture.SelectSingleNode("SizeFromTemplate")!.InnerText);
     }
 
@@ -43,57 +45,56 @@ public sealed class SldTopologyTests
         var bytes = gen.GenerateFromJson(SampleSldJson);
         var xml = LoadXml(bytes);
 
-        // BUS_1 is Elements_4
+        // BUS_1 is Elements_4 (bay frames at 0..1, texts at 2..3)
         var bus1 = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/Elements_4");
         Assert.NotNull(bus1);
         Assert.Equal("101", bus1.Attributes!["TYPE"]!.Value);
-        Assert.Equal("5", bus1.SelectSingleNode("LineWidth")!.InnerText);
+        Assert.Equal("5",   bus1.SelectSingleNode("LineWidth")!.InnerText);
         Assert.Equal("TRUE", bus1.SelectSingleNode("ALCUseColor")!.InnerText);
     }
 
     [Fact]
-    public void CircuitBreaker_OutputsALCType2_AndDynEleVar()
+    public void CircuitBreaker_VectorRendered_AsGreenFilledRectangle()
     {
         var gen = new ZenonXmlGenerator();
         var bytes = gen.GenerateFromJson(SampleSldJson);
         var xml = LoadXml(bytes);
 
-        // CB11 is Elements_16 (Elements_0..1 Bay Frames, Elements_2..3 TXT, Elements_4 BUS1, Elements_5..6 TXT/BUS2, Elements_7 TXT, Elements_8 L, Elements_9 DS11, Elements_10 L, Elements_11 DS12, Elements_12..15 Lines, Elements_16 CB11)
-        var cb11 = xml.DocumentElement!.SelectSingleNode("//Elements_16");
-        Assert.NotNull(cb11);
-        Assert.Equal("16", cb11.Attributes!["TYPE"]!.Value);
-        Assert.Equal("2", cb11.SelectSingleNode("ALCType")!.InnerText);
-        Assert.Equal("SS1.BAY1.CB11.Status", cb11.SelectSingleNode("DynEleVar_0/ProjectVar")!.InnerText);
+        // CB11 is now rendered as a green rectangle (TYPE=102, FillPattern=8).
+        // Variable-name based lookup via any descendant of Picture elements.
+        // CB body rectangle has id suffix "_BODY" — search for all TYPE=102 rectangles with FillPattern=8.
+        var cbBodies = xml.DocumentElement!.SelectNodes(
+            "Apartment/Picture/*[@TYPE='102' and FillPattern[text()='8']]");
+        Assert.NotNull(cbBodies);
+        Assert.True(cbBodies.Count > 0, "Expected at least one CB body rectangle (FillPattern=8, TYPE=102).");
     }
 
     [Fact]
-    public void Disconnector_OutputsALCType7()
+    public void Disconnector_VectorRendered_AsHollowRectangle()
     {
         var gen = new ZenonXmlGenerator();
         var bytes = gen.GenerateFromJson(SampleSldJson);
         var xml = LoadXml(bytes);
 
-        // DS11 is Elements_9
-        var ds11 = xml.DocumentElement!.SelectSingleNode("//Elements_9");
-        Assert.NotNull(ds11);
-        Assert.Equal("16", ds11.Attributes!["TYPE"]!.Value);
-        Assert.Equal("7", ds11.SelectSingleNode("ALCType")!.InnerText);
-        Assert.Equal("SS1.BAY1.DS11.Status", ds11.SelectSingleNode("DynEleVar_0/ProjectVar")!.InnerText);
+        // DS elements → TYPE=102, FillPattern=0 (hollow)
+        var dsRects = xml.DocumentElement!.SelectNodes(
+            "Apartment/Picture/*[@TYPE='102' and FillPattern[text()='0'] and LineWidth[text()='2']]");
+        Assert.NotNull(dsRects);
+        Assert.True(dsRects.Count > 0, "Expected at least one DS hollow rectangle (FillPattern=0, LineWidth=2).");
     }
 
     [Fact]
-    public void Transformer_OutputsALCType4()
+    public void Transformer_VectorRendered_AsThreeCircles()
     {
         var gen = new ZenonXmlGenerator();
         var bytes = gen.GenerateFromJson(SampleSldJson);
         var xml = LoadXml(bytes);
 
-        // TR1 is Elements_24
-        var tr1 = xml.DocumentElement!.SelectSingleNode("//Elements_24");
-        Assert.NotNull(tr1);
-        Assert.Equal("16", tr1.Attributes!["TYPE"]!.Value);
-        Assert.Equal("4", tr1.SelectSingleNode("ALCType")!.InnerText);
-        Assert.Equal("SS1.BAY1.TR1.Status", tr1.SelectSingleNode("DynEleVar_0/ProjectVar")!.InnerText);
+        // TR1 → 3 circles TYPE=103
+        var circles = xml.DocumentElement!.SelectNodes("Apartment/Picture/*[@TYPE='103']");
+        Assert.NotNull(circles);
+        // Each Transformer generates 3 circles. sample_sld has 1 TR → 3 circles.
+        Assert.True(circles.Count >= 3, $"Expected >=3 circles (TYPE=103) for transformer. Got {circles.Count}.");
     }
 
     [Fact]
@@ -122,5 +123,18 @@ public sealed class SldTopologyTests
             VariableName = "Var.TR"
         };
         Assert.Equal("4", tr.EffectiveALCType);
+    }
+
+    [Fact]
+    public void VectorSymbolRenderer_NoType16ElementsInOutput()
+    {
+        var gen = new ZenonXmlGenerator();
+        var bytes = gen.GenerateFromJson(SampleSldJson);
+        var xml = LoadXml(bytes);
+
+        // No TYPE=16 (library symbol) elements should exist in output
+        var type16 = xml.DocumentElement!.SelectNodes("Apartment/Picture/*[@TYPE='16']");
+        Assert.NotNull(type16);
+        Assert.Equal(0, type16.Count);
     }
 }

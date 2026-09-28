@@ -3,17 +3,24 @@ using System.IO;
 using System.Xml;
 using ZenonXmlGenerator;
 using ZenonXmlGenerator.Models;
+using ZenonXmlGenerator.Xml;
 
 namespace ZenonXmlGenerator.Tests;
 
 /// <summary>
-/// Symbol 요소의 변수 바인딩 및 States_n 구조 검증.
-/// Ground Truth:
-///   DynEleVar_0/ProjectVar = VariableName
-///   DynEleVar_0/SymVarName = VariableName
-///   States_0: Value=0, ValueMask=0,          SymbolName (wildcard/default)
-///   States_1: Value=0, ValueMask=4294967295,  SymbolName (OFF exact)
-///   States_2: Value=1, ValueMask=4294967295,  SymbolName (ON exact)
+/// Symbol 요소의 자체 완결형 벡터 렌더링(VectorSymbolRenderer) 검증.
+///
+/// 변경 내역:
+///   이전: TYPE=16(library symbol), DynEleVar_0, States_n 구조 검증
+///   현재: VectorSymbolRenderer가 SymbolElement → 벡터 프리미티브(Rectangle/Circle/Line)로 분해
+///
+/// 검증 전략:
+///   - 출력에 TYPE=16 없음
+///   - CB → TYPE=102 filled rectangle (FillPattern=8)
+///   - DS → TYPE=102 hollow rectangle (FillPattern=0)
+///   - ES → TYPE=103 circle + lines
+///   - TR → 3개 TYPE=103 circles
+///   - SymbolElement.EffectiveALCType 모델 속성은 유지
 /// </summary>
 public sealed class SymbolBindingTests
 {
@@ -32,146 +39,170 @@ public sealed class SymbolBindingTests
         return doc;
     }
 
-    private static XmlElement GetSymbolEle(XmlDocument doc) =>
-        (XmlElement)doc.DocumentElement!
-            .SelectSingleNode("Apartment/Picture/Elements_0")!;
+    private static XmlNodeList GetPictureChildren(XmlDocument doc) =>
+        doc.DocumentElement!.SelectNodes("Apartment/Picture/*[@TYPE]")!;
 
-    // ─── TYPE 코드 ────────────────────────────────────────────────────
+    // ─── VectorSymbolRenderer: TYPE=16 없음 검증 ────────────────────────
 
     [Fact]
-    public void Symbol_HasTypeCode16()
+    public void Symbol_VectorRenderer_NoType16InOutput()
     {
         var sym = new SymbolElement
         {
-            Id = "S1", VariableName = "Var1", LibrarySymbolName = "CB_Open",
-            X = 0, Y = 0, Width = 40, Height = 40,
+            Id = "S1", DeviceType = DeviceType.CircuitBreaker,
+            CenterX = 100, CenterY = 100, LibrarySymbolName = "CB_Open",
         };
-        var xml = BuildWithSymbol(sym);
-        Assert.Equal("16", GetSymbolEle(xml).GetAttribute("TYPE"));
+        var xml    = BuildWithSymbol(sym);
+        var type16 = xml.DocumentElement!.SelectNodes("Apartment/Picture/*[@TYPE='16']")!;
+        Assert.Equal(0, type16.Count);
     }
 
-    // ─── DynEleVar_0 바인딩 ───────────────────────────────────────────
+    // ─── CircuitBreaker → 녹색 채움 사각형 (TYPE=102, FillPattern=8) ───
 
     [Fact]
-    public void Symbol_DynEleVar0_HasProjectVar()
-    {
-        const string varName = "Substation1.CB1.Status";
-        var sym = new SymbolElement
-        {
-            Id = "S1", VariableName = varName, LibrarySymbolName = "CB_Open",
-            X = 0, Y = 0, Width = 40, Height = 40,
-        };
-        var xml = BuildWithSymbol(sym);
-        var ele = GetSymbolEle(xml);
-
-        var projectVar = ele.SelectSingleNode("DynEleVar_0/ProjectVar")!.InnerText;
-        Assert.Equal(varName, projectVar);
-    }
-
-    [Fact]
-    public void Symbol_DynEleVar0_HasSymVarName()
-    {
-        const string varName = "Substation1.CB1.Status";
-        var sym = new SymbolElement
-        {
-            Id = "S1", VariableName = varName, LibrarySymbolName = "CB_Open",
-            X = 0, Y = 0, Width = 40, Height = 40,
-        };
-        var xml = BuildWithSymbol(sym);
-        var ele = GetSymbolEle(xml);
-
-        var symVarName = ele.SelectSingleNode("DynEleVar_0/SymVarName")!.InnerText;
-        Assert.Equal(varName, symVarName);
-    }
-
-    // ─── 자동 3-state 생성 ────────────────────────────────────────────
-
-    [Fact]
-    public void Symbol_AutoStates_GeneratesThreeStates()
+    public void Symbol_CircuitBreaker_RenderedAsFilledRectangle()
     {
         var sym = new SymbolElement
         {
-            Id = "S1", VariableName = "Var1", LibrarySymbolName = "CB_Open",
-            X = 0, Y = 0, Width = 40, Height = 40,
-            // States 생략 → 자동 생성
+            Id = "CB1", DeviceType = DeviceType.CircuitBreaker,
+            CenterX = 200, CenterY = 300, LibrarySymbolName = "CB_Open",
         };
-        var xml = BuildWithSymbol(sym);
-        var ele = GetSymbolEle(xml);
+        var xml     = BuildWithSymbol(sym);
+        var body    = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/*[@TYPE='102']");
+        Assert.NotNull(body);
 
-        Assert.NotNull(ele.SelectSingleNode("States_0"));
-        Assert.NotNull(ele.SelectSingleNode("States_1"));
-        Assert.NotNull(ele.SelectSingleNode("States_2"));
-        Assert.Null(ele.SelectSingleNode("States_3")); // 3개 초과 없음
+        var fp = body.SelectSingleNode("FillPattern")?.InnerText;
+        Assert.Equal("8", fp);
     }
 
     [Fact]
-    public void Symbol_AutoStates_States0_IsWildcard()
+    public void Symbol_CircuitBreaker_HasStandardSize32x32()
     {
         var sym = new SymbolElement
         {
-            Id = "S1", VariableName = "Var1", LibrarySymbolName = "CB_Open",
-            X = 0, Y = 0, Width = 40, Height = 40,
+            Id = "CB1", DeviceType = DeviceType.CircuitBreaker,
+            CenterX = 200, CenterY = 300, LibrarySymbolName = "CB_Open",
         };
-        var xml = BuildWithSymbol(sym);
-        var s0  = GetSymbolEle(xml).SelectSingleNode("States_0")!;
-
-        Assert.Equal("0", s0.SelectSingleNode("Value")!.InnerText);
-        Assert.Equal("0", s0.SelectSingleNode("ValueMask")!.InnerText);
-        Assert.Equal("zenOn(R) embedded object",
-            ((XmlElement)s0).GetAttribute("NODE"));
+        var xml  = BuildWithSymbol(sym);
+        var body = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/*[@TYPE='102']");
+        Assert.NotNull(body);
+        Assert.Equal("32", body.SelectSingleNode("Width")!.InnerText);
+        Assert.Equal("32", body.SelectSingleNode("Height")!.InnerText);
     }
 
     [Fact]
-    public void Symbol_AutoStates_States1_IsOffExact()
+    public void Symbol_CircuitBreaker_CenterXCenterY_SnapsToTopLeft()
+    {
+        // centerX=200, centerY=300, CB size=32 → StartX=184, StartY=284
+        var sym = new SymbolElement
+        {
+            Id = "CB1", DeviceType = DeviceType.CircuitBreaker,
+            CenterX = 200, CenterY = 300, LibrarySymbolName = "CB_Open",
+        };
+        var xml  = BuildWithSymbol(sym);
+        var body = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/*[@TYPE='102']");
+        Assert.NotNull(body);
+        Assert.Equal("184", body.SelectSingleNode("StartX")!.InnerText);
+        Assert.Equal("284", body.SelectSingleNode("StartY")!.InnerText);
+    }
+
+    // ─── Disconnector → 빈 사각형 테두리 (TYPE=102, FillPattern=0) ─────
+
+    [Fact]
+    public void Symbol_Disconnector_RenderedAsHollowRectangle()
     {
         var sym = new SymbolElement
         {
-            Id = "S1", VariableName = "Var1", LibrarySymbolName = "CB_Open",
-            X = 0, Y = 0, Width = 40, Height = 40,
+            Id = "DS1", DeviceType = DeviceType.Disconnector,
+            CenterX = 150, CenterY = 250, LibrarySymbolName = "DS_Open",
         };
-        var xml = BuildWithSymbol(sym);
-        var s1  = GetSymbolEle(xml).SelectSingleNode("States_1")!;
+        var xml  = BuildWithSymbol(sym);
+        // First TYPE=102 element should be hollow DS (FillPattern=0)
+        var body = xml.DocumentElement!.SelectSingleNode(
+            "Apartment/Picture/*[@TYPE='102' and FillPattern[text()='0']]");
+        Assert.NotNull(body);
+        Assert.Equal("24", body.SelectSingleNode("Width")!.InnerText);
+        Assert.Equal("24", body.SelectSingleNode("Height")!.InnerText);
+    }
 
-        Assert.Equal("0",          s1.SelectSingleNode("Value")!.InnerText);
-        Assert.Equal("4294967295", s1.SelectSingleNode("ValueMask")!.InnerText);
+    // ─── EarthSwitch → 원 + 접지 인출선 + 사다리 ──────────────────────
+
+    [Fact]
+    public void Symbol_EarthSwitch_RenderedAsCircleAndLines()
+    {
+        var sym = new SymbolElement
+        {
+            Id = "ES1", DeviceType = DeviceType.EarthSwitch,
+            CenterX = 300, CenterY = 400, LibrarySymbolName = "ES_Open",
+        };
+        var xml     = BuildWithSymbol(sym);
+        var circles = xml.DocumentElement!.SelectNodes("Apartment/Picture/*[@TYPE='103']")!;
+        var lines   = xml.DocumentElement!.SelectNodes("Apartment/Picture/*[@TYPE='101']")!;
+
+        Assert.True(circles.Count >= 1, "EarthSwitch should produce at least 1 circle.");
+        Assert.True(lines.Count >= 4, "EarthSwitch should produce lead line + 3 ground rungs (>=4 lines).");
+    }
+
+    // ─── Transformer → 3개 원 (TYPE=103) + 텍스트 ─────────────────────
+
+    [Fact]
+    public void Symbol_Transformer_RenderedAsThreeCircles()
+    {
+        var sym = new SymbolElement
+        {
+            Id = "TR1", DeviceType = DeviceType.Transformer,
+            CenterX = 500, CenterY = 500, LibrarySymbolName = "TR_YYD",
+        };
+        var xml     = BuildWithSymbol(sym);
+        var circles = xml.DocumentElement!.SelectNodes("Apartment/Picture/*[@TYPE='103']")!;
+        Assert.Equal(3, circles.Count);
     }
 
     [Fact]
-    public void Symbol_AutoStates_States2_IsOnExact()
+    public void Symbol_Transformer_HasWindingTextLabels()
     {
         var sym = new SymbolElement
         {
-            Id = "S1", VariableName = "Var1", LibrarySymbolName = "CB_Open",
-            X = 0, Y = 0, Width = 40, Height = 40,
+            Id = "TR1", DeviceType = DeviceType.Transformer,
+            CenterX = 500, CenterY = 500, LibrarySymbolName = "TR_YYD",
         };
-        var xml = BuildWithSymbol(sym);
-        var s2  = GetSymbolEle(xml).SelectSingleNode("States_2")!;
-
-        Assert.Equal("1",          s2.SelectSingleNode("Value")!.InnerText);
-        Assert.Equal("4294967295", s2.SelectSingleNode("ValueMask")!.InnerText);
+        var xml   = BuildWithSymbol(sym);
+        var texts = xml.DocumentElement!.SelectNodes("Apartment/Picture/*[@TYPE='107']")!;
+        // 3 winding labels (Y, Y, Δ)
+        Assert.True(texts.Count >= 3, $"Expected >=3 winding text labels (Y/Y/Δ). Got {texts.Count}.");
     }
 
-    // ─── 커스텀 States 사용 ──────────────────────────────────────────
+    // ─── SymbolElement 모델 속성 (VectorSymbolRenderer 무관) ──────────
 
     [Fact]
-    public void Symbol_CustomStates_AreUsed()
+    public void SymbolElement_EffectiveALCType_CircuitBreaker_Is2()
     {
-        var sym = new SymbolElement
-        {
-            Id = "S2", VariableName = "Var2", LibrarySymbolName = "DS_Open",
-            X = 0, Y = 0, Width = 40, Height = 40,
-            States = new List<SymbolState>
-            {
-                new() { Value = 0, ValueMask = 0,          SymbolName = "DS_Open"   },
-                new() { Value = 0, ValueMask = 4294967295, SymbolName = "DS_Open"   },
-                new() { Value = 1, ValueMask = 4294967295, SymbolName = "DS_Closed" },
-            },
-        };
-        var xml = BuildWithSymbol(sym);
-        var ele = GetSymbolEle(xml);
+        var cb = new SymbolElement { DeviceType = DeviceType.CircuitBreaker, LibrarySymbolName = "CB" };
+        Assert.Equal("2", cb.EffectiveALCType);
+    }
 
-        Assert.Equal("DS_Open",   ele.SelectSingleNode("States_0/SymbolName")!.InnerText);
-        Assert.Equal("DS_Open",   ele.SelectSingleNode("States_1/SymbolName")!.InnerText);
-        Assert.Equal("DS_Closed", ele.SelectSingleNode("States_2/SymbolName")!.InnerText);
+    [Fact]
+    public void SymbolElement_EffectiveALCType_Disconnector_Is7()
+    {
+        var ds = new SymbolElement { DeviceType = DeviceType.Disconnector, LibrarySymbolName = "DS" };
+        Assert.Equal("7", ds.EffectiveALCType);
+    }
+
+    [Fact]
+    public void SymbolElement_EffectiveALCType_Transformer_Is4()
+    {
+        var tr = new SymbolElement { DeviceType = DeviceType.Transformer, LibrarySymbolName = "TR" };
+        Assert.Equal("4", tr.EffectiveALCType);
+    }
+
+    [Fact]
+    public void SymbolElement_EffectiveWidth_DefaultsFromDeviceType()
+    {
+        var cb = new SymbolElement { DeviceType = DeviceType.CircuitBreaker };
+        var ds = new SymbolElement { DeviceType = DeviceType.Disconnector };
+        var tr = new SymbolElement { DeviceType = DeviceType.Transformer };
+        Assert.Equal(32, cb.EffectiveWidth);
+        Assert.Equal(24, ds.EffectiveWidth);
+        Assert.Equal(60, tr.EffectiveWidth);
     }
 }
