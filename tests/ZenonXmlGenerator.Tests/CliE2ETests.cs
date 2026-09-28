@@ -164,7 +164,7 @@ public sealed class CliE2ETests
             Assert.Equal("0", bayAc.SelectSingleNode("AlphaBackColor")!.InnerText);
             Assert.Equal("TRUE", bayAc.SelectSingleNode("Transparent")!.InnerText);
             Assert.Equal("1", bayAc.SelectSingleNode("LineWidth")!.InnerText);
-            Assert.Equal("5C6C75", bayAc.SelectSingleNode("LineColorEx")!.InnerText);
+            Assert.Equal("756C5C", bayAc.SelectSingleNode("LineColorEx")!.InnerText);
         }
         finally
         {
@@ -268,6 +268,71 @@ public sealed class CliE2ETests
             Assert.NotNull(picture);
             Assert.Equal(customName, picture.Attributes!["ShortName"]!.Value);
             Assert.Equal(customName, picture.SelectSingleNode("Title")!.InnerText);
+        }
+        finally
+        {
+            if (File.Exists(tempXml)) File.Delete(tempXml);
+        }
+    }
+
+    [Fact]
+    public void Cli_SelfValidation_StrictSchemaRules_AllElementsVerified()
+    {
+        var tempXml = Path.Combine(Path.GetTempPath(), $"cli_test_selfval_{Guid.NewGuid():N}.xml");
+        try
+        {
+            var exitCode = Program.Main([
+                "--input", SampleHvdcFullJsonPath,
+                "--output", tempXml,
+                "--screen-name", "HVDC_FULL_BIPOLE_SLD"
+            ]);
+
+            Assert.Equal(Program.ExitSuccess, exitCode);
+
+            var doc = new XmlDocument();
+            using (var ms = new MemoryStream(File.ReadAllBytes(tempXml)))
+            {
+                doc.Load(ms);
+            }
+
+            var picture = doc.DocumentElement!.SelectSingleNode("Apartment/Picture");
+            Assert.NotNull(picture);
+
+            // 1. Text elements: AlphaForeColor MUST be 255 (not 0), Transparent TRUE, AlphaBackColor 0
+            var texts = picture.SelectNodes("*[@TYPE='107']");
+            Assert.NotNull(texts);
+            Assert.True(texts.Count > 0);
+            foreach (XmlNode t in texts)
+            {
+                Assert.Equal("255", t.SelectSingleNode("AlphaForeColor")!.InnerText);
+                Assert.Equal("TRUE", t.SelectSingleNode("Transparent")!.InnerText);
+                Assert.Equal("0", t.SelectSingleNode("AlphaBackColor")!.InnerText);
+                Assert.Equal("FFFFFF", t.SelectSingleNode("LineColorEx")!.InnerText);
+            }
+
+            // 2. Solid CircuitBreaker: FillPattern 1, Transparent FALSE, AlphaBackColor 255, FillColorEx 53C800 (BGR)
+            var cbs = picture.SelectNodes("*[@TYPE='102' and Width[text()='32'] and Height[text()='32']]");
+            Assert.NotNull(cbs);
+            Assert.True(cbs.Count > 0);
+            foreach (XmlNode cb in cbs)
+            {
+                Assert.Equal("1", cb.SelectSingleNode("FillPattern")!.InnerText);
+                Assert.Equal("FALSE", cb.SelectSingleNode("Transparent")!.InnerText);
+                Assert.Equal("255", cb.SelectSingleNode("AlphaBackColor")!.InnerText);
+                Assert.Equal("53C800", cb.SelectSingleNode("FillColorEx")!.InnerText);
+                Assert.Equal("FFFFFF", cb.SelectSingleNode("LineColorEx")!.InnerText);
+            }
+
+            // 3. Lines: LineColorEx must be valid 6-char BGR hex and not 000000
+            var lines = picture.SelectNodes("*[@TYPE='101']");
+            Assert.NotNull(lines);
+            Assert.True(lines.Count > 0);
+            foreach (XmlNode l in lines)
+            {
+                var lc = l.SelectSingleNode("LineColorEx")!.InnerText;
+                Assert.Equal(6, lc.Length);
+                Assert.NotEqual("000000", lc);
+            }
         }
         finally
         {

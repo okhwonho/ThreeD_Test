@@ -8,9 +8,9 @@ namespace ZenonXmlGenerator.Xml.ElementWriters;
 ///
 /// zenon 15 Strict XML 규격:
 /// - 투명 구역 (Bay Frame, 투명 박스):
-///   FillPattern="0", Transparent="TRUE", BackColor="0", AlphaBackColor="0", LineColorEx
+///   FillPattern="0", Transparent="TRUE", BackColor="0", AlphaBackColor="0", LineColorEx={BGR Hex}
 /// - 단색 채움 (CircuitBreaker, 계측 패널 등):
-///   FillPattern="1", Transparent="FALSE", BackColor/FillColor/FillColorEx, AlphaBackColor="255", LineColorEx
+///   FillPattern="1", Transparent="FALSE", BackColor/FillColor={COLORREF}, FillColorEx={BGR Hex}, AlphaBackColor="255", LineColorEx={BGR Hex}
 /// </summary>
 public sealed class RectangleWriter : IElementWriter
 {
@@ -28,22 +28,23 @@ public sealed class RectangleWriter : IElementWriter
         writer.WriteElementString("Height",          rect.Height.ToString());
         writer.WriteElementString("LineWidth",       rect.LineWidth.ToString());
 
-        var cleanBorder = string.IsNullOrWhiteSpace(rect.BorderColor) ? "FFFFFF" : rect.BorderColor.TrimStart('#');
-        writer.WriteElementString("ForeColor",       ColorConverter.ToColorRefString(rect.BorderColor));
-        writer.WriteElementString("LineColorEx",     cleanBorder);
+        var borderRef = ColorConverter.ToColorRefString(rect.BorderColor);
+        var borderBgrHex = ColorConverter.ToBgrHexString(rect.BorderColor);
+        writer.WriteElementString("ForeColor",       borderRef);
+        writer.WriteElementString("LineColorEx",     borderBgrHex);
 
         bool isFilled = !string.IsNullOrWhiteSpace(rect.FillColor) && rect.FillColor != "transparent";
 
         if (isFilled)
         {
             var fillRef = ColorConverter.ToColorRefString(rect.FillColor!);
-            var cleanFill = rect.FillColor!.TrimStart('#');
+            var fillBgrHex = ColorConverter.ToBgrHexString(rect.FillColor!);
 
             writer.WriteElementString("FillPattern",     "1");
             writer.WriteElementString("Transparent",     "FALSE");
             writer.WriteElementString("BackColor",       fillRef);
             writer.WriteElementString("FillColor",       fillRef);
-            writer.WriteElementString("FillColorEx",     cleanFill);
+            writer.WriteElementString("FillColorEx",     fillBgrHex);
             writer.WriteElementString("AlphaBackColor",  "255");
         }
         else

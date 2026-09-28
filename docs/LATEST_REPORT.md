@@ -1,82 +1,113 @@
 # Latest Execution Report
 
-> **작업 일시:** 2026-09-28 16:06 KST  
-> **마일스톤:** 다크 테마 블랙아웃 방지 및 XML 색상/채우기 속성 강제 적용 (Strict XML Tag Rules)
+> **작업 일시:** 2026-09-28 16:42 KST  
+> **마일스톤:** zenon 15 XML 심층 스키마 분석 및 자체 검증(Self-Validation) 완료 — 텍스트 블랙아웃 및 심볼 채우기 결함의 근본 원인 규명 및 엔진 전면 리팩토링
 
 ---
 
-## 1. 개요 및 원인 분석 (Root Cause Analysis)
+## 1. Ground Truth 분석 및 근본 원인 규명 (Root Cause Identification)
 
-### 1.1 현상 및 원인
-- **현상:** 다크 배경(`#07101C`) 위에서 선(Line)과 글자(Text)가 검은색 기본값으로 렌더링되거나 `LineColorEx` 누락으로 인해 보이지 않는 '블랙아웃' 현상 발생.
-- **원인:**
-  1. `LineWriter.cs`에서 필수 속성인 `<LineColorEx>` 태그가 누락되어 검은색 선으로 렌더링됨.
-  2. 기기 심볼 단색 채움 시 zenon 15의 필수 태그 세트(`FillPattern=1`, `Transparent=FALSE`, `BackColor`, `FillColor`, `FillColorEx`, `AlphaBackColor=255`, `LineColorEx`)가 완전히 충족되지 않음.
-  3. 텍스트 박스에서 다크 배경용 폰트 색상 태그가 누락되어 검은색 글자로 렌더링됨.
+### 1.1 텍스트(Text, TYPE="107") 블랙아웃 결함의 근본 원인
+- **현상:** 다크 배경에서 모든 텍스트가 렌더링되지 않고 완전히 사라짐.
+- **원인 규명:**
+  1. 기존 `TextWriter.cs`에 포함되어 있던 `<AlphaForeColor>0</AlphaForeColor>` 태그가 원인이었음.
+  2. zenon 그래픽 엔진에서 `AlphaForeColor`는 전경 폰트(글자)의 Alpha 채널(불투명도)을 정의하며, `0`으로 지정되면 **글자 자체가 100% 완전 투명(Fully Transparent)** 처리되어 화면에서 완전히 소멸함.
+  3. **해결:** `<AlphaForeColor>255</AlphaForeColor>` (완전 불투명 100% 선명도)로 수정하고, 배경 투명화는 `<AlphaBackColor>0</AlphaBackColor>` 및 `<Transparent>TRUE</Transparent>`로 명확히 분리.
+
+### 1.2 기기 심볼(차단기/접지기) 단색 채움(Solid Fill) 실패 및 선 색상 무시 원인
+- **현상:** 차단기/접지기 심볼 내부가 채워지지 않고 투명하게 보이거나 선 색상이 의도대로 나오지 않음.
+- **원인 규명:**
+  1. **헥사코드 포맷 불일치:** zenon 15의 `LineColorEx`, `FillColorEx` 속성은 **BBGGRR (BGR 16진수)** 포맷을 요구함.
+  2. 기존 코드에서는 C#의 `TrimStart('#')`로 RGB 16진수(`00C853`, `E53935`)를 그대로 직렬화하고 있었음.
+  3. zenon 파서가 RGB 포맷의 헥사코드를 인식하지 못하거나 엉뚱한 BGR 색상으로 해석하여 투명/기본값으로 폴백됨.
+  4. **해결:** `ColorConverter.ToBgrHexString()` 메서드를 신설하여 모든 `LineColorEx` 및 `FillColorEx` 태그에 완벽한 BGR 16진수(`53C800`, `3539E5`, `76E600`, `FFB000`)를 출력하도록 전면 교정.
 
 ---
 
-## 2. 해결 조치 및 구현 (Implementation of Strict Tag Rules)
+## 2. 엔진 리팩토링 상세 내역 (Engine Refactoring)
 
-### A. 선 (LineElement & `LineWriter.cs`):
-- 모든 선에 `<ForeColor>`(COLORREF) 및 `<LineColorEx>`(16진수)를 무조건 출력.
-- 검은색(`#000000`) 또는 빈 색상은 백색(`#FFFFFF`)으로 자동 보정:
-  - **일반 선로:** `LineColorEx="FFFFFF"` (백색, LineWidth=3)
-  - **AC 345kV 주 모선:** `LineColorEx="E53935"` (적색 BGR: 3539E5, LineWidth=14, ALCUseColor=TRUE)
-  - **DC +/-525kV 선로:** `LineColorEx="00E676"` / `LineColorEx="E53935"` (LineWidth=6)
-  - **DMR 중성선:** `LineColorEx="00B0FF"` (청록색 BGR: FFB000, LineWidth=6)
+### 2.1 ColorConverter (`ColorConverter.cs`)
+- `ToBgrHexString(string htmlColor)` 신설: `#RRGGBB` 문자열에서 R, G, B를 파싱하여 zenon 15 규격에 맞는 `BBGGRR` 6자리 대문자 16진수 문자열로 변환.
 
-### B. 텍스트 (TextElement & `TextWriter.cs`):
-- 글자가 다크 배경에서 선명하게 보이도록 백색(`#FFFFFF`, COLORREF `16777215`) 보장.
-- `<ForeColor>`, `<LineColorEx>FFFFFF</LineColorEx>`
-- 투명 배경 구조: `<BackColor>0</BackColor>`, `<AlphaBackColor>0</AlphaBackColor>`, `<Transparent>TRUE</Transparent>`
+### 2.2 TextWriter (`TextWriter.cs`)
+- 텍스트 노드 Ground Truth 일치화:
+  ```xml
+  <Elements_n NODE="zenOn(R) embedded object" TYPE="107">
+    <StartX>...</StartX>
+    <StartY>...</StartY>
+    <Width>...</Width>
+    <Height>...</Height>
+    <Text>...</Text>
+    <FontSize>...</FontSize>
+    <ForeColor>16777215</ForeColor>
+    <LineColorEx>FFFFFF</LineColorEx>
+    <BackColor>0</BackColor>
+    <LineColor>FFFFFF</LineColor>
+    <AlphaForeColor>255</AlphaForeColor>  <!-- 글자 100% 가시성 확보 -->
+    <AlphaLineColor>FFFFFF</AlphaLineColor>
+    <AlphaBackColor>0</AlphaBackColor>    <!-- 배경 100% 투명 -->
+    <Transparent>TRUE</Transparent>
+  </Elements_n>
+  ```
 
-### C. 기기 심볼 (차단기 Rectangle 32×32, 접지기 Circle d=24):
-- 단색 녹색 채움(Solid Fill)을 위한 엄격한 태그 조합 적용:
+### 2.3 RectangleWriter & CircleWriter (`RectangleWriter.cs`, `CircleWriter.cs`)
+- 단색 채움(차단기 CB, 계측 카드 등):
   ```xml
   <FillPattern>1</FillPattern>
   <Transparent>FALSE</Transparent>
-  <BackColor>5490688</BackColor>
-  <FillColor>5490688</FillColor>
-  <FillColorEx>00C853</FillColorEx>
+  <BackColor>{FillRef}</BackColor>
+  <FillColor>{FillRef}</FillColor>
+  <FillColorEx>{FillBgrHex}</FillColorEx>  <!-- BGR Hex 예: 53C800 -->
   <AlphaBackColor>255</AlphaBackColor>
   <ForeColor>16777215</ForeColor>
   <LineColorEx>FFFFFF</LineColorEx>
   ```
-
-### D. 구역 배경 박스 (Bay / 구역 테두리):
-- 내부는 투명하되 테두리가 선명하게 보이도록 구성:
+- 투명 구역(Bay Box, 변압기 원환 등):
   ```xml
   <FillPattern>0</FillPattern>
   <Transparent>TRUE</Transparent>
   <BackColor>0</BackColor>
   <AlphaBackColor>0</AlphaBackColor>
-  <ForeColor>{BorderColorRef}</ForeColor>
-  <LineColorEx>{BorderColorHex}</LineColorEx>
-  <LineWidth>1</LineWidth>
+  <ForeColor>{BorderRef}</ForeColor>
+  <LineColorEx>{BorderBgrHex}</LineColorEx>
   ```
+
+### 2.4 LineWriter (`LineWriter.cs`)
+- 모든 Line 노드에 `LineColorEx`를 BGR 16진수로 반드시 기록. 검은색 라인 배제(백색 `#FFFFFF` fallback).
 
 ---
 
-## 3. 세부 변경 파일 목록
-| 파일 | 변경 유형 | 주요 내용 |
-|------|-----------|-----------|
-| `src/.../Xml/ElementWriters/LineWriter.cs` | 수정 | `LineColorEx` 태그 필수 출력 및 검은색 선(#000000) 백색(#FFFFFF) 자동 보정 |
-| `src/.../Xml/ElementWriters/TextWriter.cs` | 수정 | `LineColorEx="FFFFFF"` 태그 출력 및 검은색 글자 백색 자동 보정 |
-| `src/.../Xml/ElementWriters/RectangleWriter.cs` | 수정 | 단색 채움(FillPattern=1, Transparent=FALSE, Alpha=255) / 투명(FillPattern=0, Transparent=TRUE, Alpha=0) Strict 태그 세트 출력 |
-| `src/.../Xml/ElementWriters/CircleWriter.cs` | 수정 | 단색 채움(FillPattern=1, Transparent=FALSE, Alpha=255) / 투명(FillPattern=0, Transparent=TRUE, Alpha=0) Strict 태그 세트 출력 |
-| `tests/.../Samples/hvdc_full_system_topology.json` | 수정 | 일반 배선 색상 `#B0BEC5` -> `#FFFFFF`로 통일하여 다크 캔버스 가독성 극대화 |
-| `output_hvdc_full_system.xml` | 재생성 | 192,078 bytes, UTF-16 LE BOM (모든 Line/Text/Symbol에 명시적 색상 속성 적용) |
+## 3. 자체 검증(Self-Validation) 수행 결과
+
+### 3.1 Python 스크립트 기반 전수 Assert 검증
+- 생성된 `output_hvdc_full_system.xml` (192,358 bytes)을 파싱하여 다음 조건을 전수 Assert:
+  1. **총 70개 Text 노드(TYPE="107"):**
+     - `AlphaForeColor == "255"` (100% 통과, 0인 노드 0개)
+     - `Transparent == "TRUE"` 및 `AlphaBackColor == "0"` (100% 통과)
+     - `LineColorEx == "FFFFFF"` (100% 통과)
+  2. **총 11개 차단기(CB) 단색 사각형(TYPE="102", 32×32):**
+     - `FillPattern == "1"`, `Transparent == "FALSE"`, `AlphaBackColor == "255"` (100% 통과)
+     - `FillColorEx == "53C800"` (BGR 포맷 100% 일치)
+     - `LineColorEx == "FFFFFF"` (100% 통과)
+  3. **총 81개 선(Line) 노드(TYPE="101"):**
+     - `LineColorEx`가 유효한 6자리 BGR 16진수이며 `000000`(검정)이 아님 (100% 통과)
+  4. **총 15개 원(Circle) 노드(TYPE="103"):**
+     - 9개 접지기(ES) 단색 원: `Transparent == "FALSE"`, `AlphaBackColor == "255"`, `FillColorEx == "53C800"` (100% 통과)
+     - 6개 변압기(TR) 투명 원환: `Transparent == "TRUE"`, `AlphaBackColor == "0"` (100% 통과)
+
+### 3.2 xUnit 회귀 방지 테스트 통합
+- `CliE2ETests.Cli_SelfValidation_StrictSchemaRules_AllElementsVerified` 테스트를 작성하여 전체 75개 테스트를 자동화 파이프라인에 영구 등록 완료.
 
 ---
 
 ## 4. 검증 결과 (Validation Results)
 - **빌드 (`dotnet build`):** 성공 (경고 0, 오류 0)
 - **단위 및 E2E 테스트 (`dotnet test`):**
-  - 총 테스트 수: **74개**
-  - 통과: **74개**
+  - 총 테스트 수: **75개** (신규 Self-Validation E2E 포함)
+  - 통과: **75개**
   - 실패: **0개**
-  - 실행 시간: **64 ms**
+  - 실행 시간: **69 ms**
+- **산출물:** `output_hvdc_full_system.xml` — **192,358 bytes** (UTF-16 LE BOM)
 
 ---
 

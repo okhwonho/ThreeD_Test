@@ -166,6 +166,6 @@ public sealed class RootNodeTests
         Assert.Equal("0", rect.SelectSingleNode("AlphaBackColor")!.InnerText);
         Assert.Equal("TRUE", rect.SelectSingleNode("Transparent")!.InnerText);
         Assert.Equal("1", rect.SelectSingleNode("LineWidth")!.InnerText);
-        Assert.Equal("5C6C75", rect.SelectSingleNode("LineColorEx")!.InnerText);
+        Assert.Equal("756C5C", rect.SelectSingleNode("LineColorEx")!.InnerText);
     }
 }
