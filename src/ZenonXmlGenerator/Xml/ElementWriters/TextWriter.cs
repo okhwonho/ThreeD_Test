@@ -64,8 +64,8 @@ public sealed class TextWriter : IElementWriter
         writer.WriteEndElement(); // <FillStyle/>
 
         writer.WriteElementString("FillPattern",    "0");
-        writer.WriteElementString("AlphaBackColor", "0");
-        writer.WriteElementString("BackColor",      "0");
+        writer.WriteElementString("AlphaBackColor", "100");
+        writer.WriteElementString("BackColor",      XmlConstants.PictureBackgroundColor);
         writer.WriteElementString("Transparent",    "TRUE");
         writer.WriteElementString("LineWidth",      "0");
 

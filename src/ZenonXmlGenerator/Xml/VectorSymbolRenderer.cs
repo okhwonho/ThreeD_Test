@@ -29,13 +29,57 @@ public static class VectorSymbolRenderer
     /// </summary>
     public static List<TopologyElement> Expand(IEnumerable<TopologyElement> elements)
     {
+        var elemList = new List<TopologyElement>(elements);
+        var trCenters = new HashSet<(int X, int Y)>();
+        foreach (var el in elemList)
+        {
+            if (el is SymbolElement sym && sym.DeviceType == DeviceType.Transformer)
+            {
+                int cx = sym.CenterX ?? (sym.EffectiveX + sym.EffectiveWidth / 2);
+                int cy = sym.CenterY ?? (sym.EffectiveY + sym.EffectiveHeight / 2);
+                trCenters.Add((cx, cy));
+            }
+        }
+
         var result = new List<TopologyElement>();
-        foreach (var element in elements)
+        foreach (var element in elemList)
         {
             if (element is SymbolElement sym)
+            {
                 result.AddRange(ExpandSymbol(sym));
+            }
+            else if (element is LineElement line && line.X1 == line.X2 && trCenters.Count > 0)
+            {
+                int x = line.X1;
+                int y1 = line.Y1;
+                int y2 = line.Y2;
+                const int trOuterOffset = 44; // 2 * TRCircleRadius (22)
+                if (trCenters.Contains((x, y1)))
+                {
+                    y1 = y2 < y1 ? y1 - trOuterOffset : y1 + trOuterOffset;
+                }
+                if (trCenters.Contains((x, y2)))
+                {
+                    y2 = y1 < y2 ? y2 - trOuterOffset : y2 + trOuterOffset;
+                }
+                result.Add(new LineElement
+                {
+                    Id          = line.Id,
+                    X1          = x,
+                    Y1          = y1,
+                    X2          = x,
+                    Y2          = y2,
+                    Color       = line.Color,
+                    LineWidth   = line.LineWidth,
+                    DeviceType  = line.DeviceType,
+                    ALCUseColor = line.ALCUseColor,
+                    TagLabel    = line.TagLabel,
+                });
+            }
             else
+            {
                 result.Add(element);
+            }
         }
         return result;
     }
@@ -223,11 +267,11 @@ public static class VectorSymbolRenderer
             new TextElement
             {
                 Id       = sym.Id + "_LBL",
-                X        = cx - 8,
-                Y        = cy - 6,
+                X        = cx - 40,
+                Y        = cy - 14,
                 Text     = "CT",
                 FontSize = 8,
-                Color    = "#000000",
+                Color    = XmlConstants.ColorTextPrimary,
             },
         ];
     }
@@ -253,11 +297,11 @@ public static class VectorSymbolRenderer
             new TextElement
             {
                 Id       = sym.Id + "_LBL",
-                X        = cx - 8,
-                Y        = cy - 6,
+                X        = cx - 40,
+                Y        = cy - 14,
                 Text     = "PT",
                 FontSize = 8,
-                Color    = "#000000",
+                Color    = XmlConstants.ColorTextPrimary,
             },
         ];
     }

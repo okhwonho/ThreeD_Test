@@ -152,7 +152,9 @@ public sealed class ZenonXmlBuilder
 
     /// <summary>
     /// SymbolElement 중 TagLabel이 설정된 항목의 바로 앞에 자동 TextElement를 삽입한다.
-    /// TextElement 위치: 심볼 중심 X, 심볼 EffectiveY - XmlConstants.TagLabelYOffset
+    /// 기본 위치: 심볼 중심 X, 심볼 상단 - XmlConstants.TagLabelYOffset.
+    /// 단, 심볼 상단으로 수직 선로(Vertical Line)가 진입하는 경우에는 선로와 텍스트가 겹치지 않도록
+    /// 우측(또는 하단)으로 자동 오프셋 배치한다.
     /// </summary>
     private static List<TopologyElement> InjectTagLabels(List<TopologyElement> elements)
     {
@@ -162,14 +164,66 @@ public sealed class ZenonXmlBuilder
         {
             if (element is SymbolElement sym && !string.IsNullOrWhiteSpace(sym.TagLabel))
             {
-                // 심볼 중심 X 계산
                 int centerX = sym.CenterX ?? (sym.EffectiveX + sym.EffectiveWidth / 2);
+                int centerY = sym.CenterY ?? (sym.EffectiveY + sym.EffectiveHeight / 2);
                 int symTop = sym.DeviceType == DeviceType.Transformer
-                    ? (sym.CenterY ?? (sym.EffectiveY + sym.EffectiveHeight / 2)) - 44
+                    ? centerY - 44
                     : sym.EffectiveY;
-                int labelY = symTop - XmlConstants.TagLabelYOffset;
+                int symBottom = sym.DeviceType == DeviceType.Transformer
+                    ? centerY + 44
+                    : sym.EffectiveY + sym.EffectiveHeight;
+                int symRight = sym.DeviceType == DeviceType.Transformer
+                    ? centerX + 44
+                    : sym.EffectiveX + sym.EffectiveWidth;
+
                 int tagWidth = Math.Max(80, (sym.TagLabel?.Length ?? 1) * 12);
                 int labelX = centerX - tagWidth / 2;
+                int labelY = symTop - XmlConstants.TagLabelYOffset;
+
+                // 심볼 상단에 수직 선로가 연결되어 있는지 검사
+                bool hasVerticalWireAbove = false;
+                bool hasHorizontalWireAtCenter = false;
+                foreach (var other in elements)
+                {
+                    if (other is LineElement line)
+                    {
+                        if (line.X1 == line.X2 && Math.Abs(line.X1 - centerX) <= 4)
+                        {
+                            int minY = Math.Min(line.Y1, line.Y2);
+                            int maxY = Math.Max(line.Y1, line.Y2);
+                            if (minY < symTop && maxY >= symTop)
+                            {
+                                hasVerticalWireAbove = true;
+                            }
+                        }
+                        else if (line.Y1 == line.Y2 && Math.Abs(line.Y1 - centerY) <= 4)
+                        {
+                            int minX = Math.Min(line.X1, line.X2);
+                            int maxX = Math.Max(line.X1, line.X2);
+                            if (minX <= symRight && maxX >= centerX)
+                            {
+                                hasHorizontalWireAtCenter = true;
+                            }
+                        }
+                    }
+                }
+
+                if (hasVerticalWireAbove)
+                {
+                    if (hasHorizontalWireAtCenter)
+                    {
+                        // 상단 수직선 + 우측/중심 수평선이 모두 있는 코너 기기(예: MMC(-))는 하단 배치
+                        labelX = centerX - tagWidth / 2;
+                        labelY = symBottom + 8;
+                    }
+                    else
+                    {
+                        // 수직 분기선 위의 기기(DS1, 71CB, DS2, TR1-CB, TR-1 등)는 기기 우측 배치
+                        int rightOffset = sym.DeviceType == DeviceType.Transformer ? 20 : 6;
+                        labelX = symRight + rightOffset;
+                        labelY = centerY - 14;
+                    }
+                }
 
                 var labelElem = new TextElement
                 {

@@ -178,8 +178,8 @@ public sealed class RootNodeTests
         var text = xml.DocumentElement!.SelectSingleNode("Apartment/Picture/*[@TYPE='107']");
         Assert.NotNull(text);
         Assert.Equal("TRUE", text.SelectSingleNode("Transparent")!.InnerText);
-        Assert.Equal("0", text.SelectSingleNode("AlphaBackColor")!.InnerText);
-        Assert.Equal("0", text.SelectSingleNode("BackColor")!.InnerText);
+        Assert.Equal("100", text.SelectSingleNode("AlphaBackColor")!.InnerText);
+        Assert.Equal("07101C", text.SelectSingleNode("BackColor")!.InnerText);
         Assert.Equal("0", text.SelectSingleNode("FillPattern")!.InnerText);
         Assert.Equal("0", text.SelectSingleNode("LineWidth")!.InnerText);
         Assert.NotNull(text.SelectSingleNode("FillStyle"));

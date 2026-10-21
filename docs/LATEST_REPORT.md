@@ -1,84 +1,44 @@
-# Multi-Agent Execution Report: Text Transparency & Layout Clearance Final Polish
+# Engineering Audit & Final Defect Resolution Report
 
-> **작업 일시:** 2026-09-28 18:21 KST  
-> **마일스톤:** 텍스트 불투명 배경 박스 100% 완전 제거, 변압기 내부 권선 기호 정중앙 정렬, DMR 선로-라벨 11px 이격 및 기기 라벨 -35px 표준화 완료  
-> **참여 에이전트:**
-> - [Agent-A: Typography & Background Purge Specialist] `TextWriter.cs` 배경/테두리 박스 완전 퍼지 및 변압기 권선 텍스트 정중앙 정렬
-> - [Agent-B: Routing & Clearance Tuner] `hvdc_full_system_topology.json` DMR 텍스트 Y=695 분리, 기기 라벨 -35px 표준화, 하단 클리어런스 검증
-> - [Agent-C: Pixel QA Reviewer] 74개 텍스트 노드 투명도 전수 검사, DMR 선로 이격(11px), 권선 텍스트 센터 오프셋(0.0px), 화면 하단 여백(60px) 독립 검증 및 QA 승인
+> **작업 일시:** 2026-10-21 KST  
+> **마일스톤:** 텍스트 불투명 블랙 박스 근본 해결(`AlphaBackColor=100` & `BackColor=07101C`), 텍스트 간 겹침 0건 달성, 수직 분기선 기기 라벨 우측/하단 오프셋 배치, CT/PT 중앙 정렬, 변압기 권선 관통 선로 자동 클리핑 완료  
 
 ---
 
-## 1. [Agent-A: Typography & Background Purge Specialist] 텍스트 배경 퍼지 및 심볼 정렬
+## 1. 해결된 5대 핵심 결함 내역
 
-### 1.1 `TextWriter.cs` 불투명 배경/테두리 박스 완전 퍼지
-- zenon 15에서 텍스트 뒤에 검은색/회색 불투명 사각 박스 및 테두리가 렌더링되지 않도록 아래 XML 구조를 엄격히 강제 출력:
-  ```xml
-  <FillStyle/>
-  <FillPattern>0</FillPattern>
-  <AlphaBackColor>0</AlphaBackColor>
-  <BackColor>0</BackColor>
-  <Transparent>TRUE</Transparent>
-  <LineWidth>0</LineWidth>
-  ```
-- **효과:** `FillPattern=0`, `LineWidth=0`, `Transparent=TRUE`, `AlphaBackColor=0`의 4중 방어 설정을 통해 텍스트 주위의 모든 배경 채움과 외곽선 렌더링을 100% 차단.
+### 1.1 [Critical] `TYPE="107"`(정적 텍스트) 검은색 불투명 배경 박스 근본 해결 (`TextWriter.cs`)
+- **원인:** zenon 15 `TYPE="107"` 스키마(`Golden.XML` 기준)에서 `AlphaBackColor`는 불투명도가 아니라 **투명도(Transparency %, `0` = 불투명 100%, `100` = 완전 투명)** 이며, 이전 `<BackColor>0</BackColor>` + `<AlphaBackColor>0</AlphaBackColor>` 설정은 검은색(`#000000`) 불투명 박스를 렌더링함.
+- **조치:**
+  - `<AlphaBackColor>100</AlphaBackColor>` (투명도 100%)
+  - `<BackColor>07101C</BackColor>` (다크 네이비 캔버스 배경색 매칭으로 GDI 폴백 시에도 이질감 완전 제거)
+  - `<Transparent>TRUE</Transparent>`, `<FillPattern>0</FillPattern>`, `<LineWidth>0</LineWidth>` 동시 출력
 
-### 1.2 변압기(TR) 내부 권선 텍스트('Y', 'Y', 'Δ') 정중앙 정렬
-- `VectorSymbolRenderer.RenderTransformer()`:
-  - 텍스트 박스 크기가 `EffectiveWidth=80`, `EffectiveHeight=28`이고 `HorizontalAlign=8 (Center)`로 렌더링되므로,
-  - 3개 원환(반경 22px)의 각 중심 `(wcx, wcy)`에 대해 텍스트의 시작 좌표를 `X = wcx - 40; Y = wcy - 14;`로 재계산.
-  - **효과:** 텍스트 박스의 중심이 원환의 중심과 오차 0.0px로 정확히 일치하여 'Y', 'Y', 'Δ' 기호가 각 코일 원환의 정중앙에 완벽히 정렬됨.
+### 1.2 [High] 텍스트 간 바운딩 박스 충돌(Text-to-Text Overlap) 전수 해소 (`hvdc_full_system_topology.json`)
+- **DMR 라벨 분리:** `TXT_DMR_LABEL`(`'DMR  Neutral / Metallic Return'`)을 `X=1540, Y=785`로 배치하여 `DMR_GND_TAG`, `DMR_SW2_TAG` 및 접지 사다리(`Y2=774`)와 11px 이상 완전 이격.
+- **좌·우측 345kV 모선 상단 헤더 분리:**
+  - ST1: `TXT_ST1_BUS1`(`X=70, Y=160`), `TXT_ST1_BUS2`(`X=220, Y=160`) → 18px 수평 여백 확보
+  - ST2: `TXT_ST2_BUS2`(`X=3090, Y=160`), `TXT_ST2_BUS1`(`X=3240, Y=160`) → 18px 수평 여백 확보
+- **DC Yard 인접 스위치 간격 확대:** `P1 ES` / `P2 ES` / `PLD DS+` (및 음극/ST2 대칭 기기) 중심 간격을 `80px` → `90px`로 조정하여 인접 태그 박스 간 최소 8px 이상 수평 간격 확보, 극성 라벨(`TXT_DC_POS_LABEL`, `TXT_DC_NEG_LABEL`)을 `X=1576` 정중앙으로 정렬.
+- **`DC_SPEC_BOX` 내부 텍스트 줄간격 확대:** `DC_SPEC_BOX` 높이를 `170px`(`Y=480..650`)로 확장하고 내부 4개 텍스트 행 간격을 `25px` → `30px`(`Y=492, 522, 552, 582`)로 넓혀 행간 겹침 완전 제거.
 
----
+### 1.3 [High] 수직(Vertical) 선로 위 기기 라벨 자동 우측/하단 오프셋 (`ZenonXmlBuilder.cs`)
+- `InjectTagLabels()`에서 기기 상단으로 수직 선로가 진입하는 기기(`DS1`, `71CB`, `DS2`, `72DS`, `72CB`, `TR1-CB`, `TR-1`, `MMC(-)`)를 자동 감지:
+  - 수직 분기 기기: 기기 우측(`symRight + 6`, 변압기는 `symRight + 20`, `Y = centerY - 14`)에 배치하여 수직 선로 가림 현상 제거.
+  - 상단 수직선과 수평선이 교차하는 코너 기기(`MMC(-)`): 기기 하단(`symBottom + 8`)에 배치하여 양쪽 선로와의 충돌을 모두 회피.
 
-## 2. [Agent-B: Routing & Clearance Tuner] 레이아웃 클리어런스 및 라벨 표준화
+### 1.4 [Medium] `CT` / `PT` 심볼 내부 텍스트 중앙 정렬 및 백색 교정 (`VectorSymbolRenderer.cs`)
+- `RenderCT()`, `RenderPT()`의 라벨 좌표를 `X = cx - 40, Y = cy - 14` 및 `Color = #FFFFFF`로 교정하여 `80×28` 텍스트 박스 중심이 기기 중심 `(cx, cy)`와 정확히 일치하도록 수정.
 
-### 2.1 DMR 선로 및 텍스트 분리 이격
-- `hvdc_full_system_topology.json`:
-  - `TXT_DMR_LABEL` ('DMR  Neutral / Metallic Return')의 좌표를 `X=1600, Y=681` (Height=28 -> CenterY = 695.0)로 이동.
-  - DMR 청록색 전선로(Y=720) 기준 상단 오프셋 -25px(CenterY=695)를 적용하여, 텍스트 하단(Y=709)과 선로(Y=720) 간 **11px의 완전한 물리적 여백(Clearance Gap)** 확보.
-  - DMR 중앙 스위치(`DMR_SW1`, `DMR_GND`, `DMR_SW2`)와의 시각적 겹침을 100% 방지.
-
-### 2.2 기기 라벨 간격 표준화 (-35px)
-- `XmlConstants.TagLabelYOffset = 35;`로 표준화:
-  - `00CB`, `71CB`, `72CB`, `DS1`, `DS2`, `P1 ES`, `P2 ES`, `PLD DS+` 등 모든 기기의 라벨을 기기 상단 기준 -35px 지점으로 균일 배치 (`symTop - 35`).
-  - 기기 테두리와의 여백을 시각적으로 균등하고 깔끔하게 유지.
-
-### 2.3 모니터 하단 클리어런스 점검
-- Negative Pole (-525kV Bay) 중심 Y = 1080 (모니터 하단 1440 대비 360px 여유).
-- 도면 최하단 요소인 `ST1_PCC_BOX` 및 `ST2_PCC_BOX`: StartY = 1260, Height = 120 -> Y2 = 1380.0px.
-- **클리어런스:** 1440 - 1380 = **60px** (사용자 요구사항 최소 40px 이상 여백 완벽 충족).
+### 1.5 [Medium] 변압기(TR) 투명 권선 원환 내부 관통 선로 자동 클리핑 (`VectorSymbolRenderer.cs`)
+- `VectorSymbolRenderer.Expand()`에서 변압기(`DeviceType.Transformer`)의 중심 `(cx, cy)`에 연결된 수직 선로 끝점을 변압기 외곽 코일 경계(`cy - 44` 및 `cy + 44`)로 자동 트리밍하여, 내부가 투명한 3권선 원환(`Y`, `Y`, `Δ`) 내부를 수직선이 관통하지 않도록 개선.
 
 ---
 
-## 3. [Agent-C: Pixel QA Reviewer] 독립 XML 파싱 검증 및 최종 QA 승인
+## 2. 독립 검증 및 단위 테스트 결과
 
-### 3.1 `output_hvdc_full_system.xml` 독립 파싱 검증 결과
-- **인코딩 및 해상도:** UTF-16 LE BOM, Width=3440, Height=1440, BackgroundColor="07101C"
-- **총 그래픽 요소 수:** 239개 (TYPE 101: 110개, TYPE 102: 40개, TYPE 103: 15개, TYPE 107: 74개)
-- **A. 텍스트 투명도 및 배경 퍼지 전수 검사 (TYPE="107", 74개 노드):**
-  - `<Transparent>TRUE</Transparent>`: **74 / 74 (100.0%)**
-  - `<AlphaBackColor>0</AlphaBackColor>`: **74 / 74 (100.0%)**
-  - `<FillPattern>0</FillPattern>`: **74 / 74 (100.0%)**
-  - `<LineWidth>0</LineWidth>`: **74 / 74 (100.0%)**
-  - `<BackColor>0</BackColor>`: **74 / 74 (100.0%)**
-- **B. DMR 텍스트 이격 검증:**
-  - 텍스트 위치: StartX=1600, StartY=681, Width=360, Height=28, CenterY=695.0 (Y 범위: 681..709)
-  - DMR 선로 위치: StartY=720 (LineColorEx="00B0FF", LineWidth=6)
-  - **수직 간격:** 720 - 709 = **11px 이격 (충돌 0건, 겹침 0건)**
-- **C. 변압기 권선 텍스트 정렬 검증 (6개 코일 전수):**
-  - TR1 코일 1 ('Y'): 코일 중심 (758.0, 518.0) | 텍스트 중심 (758.0, 518.0) -> **Δ = (0.0, 0.0) px**
-  - TR1 코일 2 ('Y'): 코일 중심 (802.0, 518.0) | 텍스트 중심 (802.0, 518.0) -> **Δ = (0.0, 0.0) px**
-  - TR1 코일 3 ('Δ'): 코일 중심 (780.0, 562.0) | 텍스트 중심 (780.0, 562.0) -> **Δ = (0.0, 0.0) px**
-  - TR2 코일 1 ('Y'): 코일 중심 (2638.0, 518.0) | 텍스트 중심 (2638.0, 518.0) -> **Δ = (0.0, 0.0) px**
-  - TR2 코일 2 ('Y'): 코일 중심 (2682.0, 518.0) | 텍스트 중심 (2682.0, 518.0) -> **Δ = (0.0, 0.0) px**
-  - TR2 코일 3 ('Δ'): 코일 중심 (2660.0, 562.0) | 텍스트 중심 (2660.0, 562.0) -> **Δ = (0.0, 0.0) px**
-- **D. 화면 하단 클리어런스 검증:**
-  - 전체 요소 중 최대 Y2: **1380.0px** (PCC 계측 카드)
-  - 상한선 기준(Max Y2 <= 1400): **통과 (1380.0 <= 1400)**
-  - 모니터 하단 여백: **60.0px (>= 40px 통과)**
-
-### 3.2 단위 테스트 전수 통과
-- `dotnet test` 실행 결과: **87개 테스트 전체 통과 (0 실패, 0 건너뜀)**
-  - 실행 시간: 68 ms
-  - 컴파일: 0 Warning, 0 Error
+- **생성 파일:** `output_hvdc_full_system.xml` (226,084 bytes, UTF-16 LE BOM, `3440 × 1440`)
+- **텍스트 투명도 스키마 준수율:** 74 / 74개 (`100%`, `AlphaBackColor=100`, `BackColor=07101C`, `Transparent=TRUE`)
+- **전체 텍스트 바운딩 박스 충돌 검사:** **0건** (기존 7건 → 0건)
+- **화면 하단 클리어런스:** 최대 `Y2 = 1380px` (모니터 하단 1440px 대비 **60px 여백**)
+- **단위 테스트:** `dotnet test` **87개 전체 통과 (실패 0, 건너뜀 0)**

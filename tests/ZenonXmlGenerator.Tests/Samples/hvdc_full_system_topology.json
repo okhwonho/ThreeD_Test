@@ -93,9 +93,9 @@
       "type": "rectangle",
       "id": "DC_SPEC_BOX",
       "x": 1580,
-      "y": 500,
+      "y": 480,
       "width": 300,
-      "height": 150,
+      "height": 170,
       "fillColor": "#0D1B2A",
       "fillPattern": 1,
       "alphaBackColor": 0,
@@ -247,8 +247,8 @@
     {
       "type": "text",
       "id": "TXT_ST1_BUS1",
-      "x": 110,
-      "y": 170,
+      "x": 70,
+      "y": 160,
       "text": "345kV BUS#1",
       "fontSize": 11,
       "color": "#E53935"
@@ -256,8 +256,8 @@
     {
       "type": "text",
       "id": "TXT_ST1_BUS2",
-      "x": 230,
-      "y": 170,
+      "x": 220,
+      "y": 160,
       "text": "345kV BUS#2",
       "fontSize": 11,
       "color": "#E53935"
@@ -265,8 +265,8 @@
     {
       "type": "text",
       "id": "TXT_ST2_BUS2",
-      "x": 3130,
-      "y": 170,
+      "x": 3090,
+      "y": 160,
       "text": "345kV BUS#2",
       "fontSize": 11,
       "color": "#E53935"
@@ -274,8 +274,8 @@
     {
       "type": "text",
       "id": "TXT_ST2_BUS1",
-      "x": 3250,
-      "y": 170,
+      "x": 3240,
+      "y": 160,
       "text": "345kV BUS#1",
       "fontSize": 11,
       "color": "#E53935"
@@ -283,7 +283,7 @@
     {
       "type": "text",
       "id": "TXT_DC_POS_LABEL",
-      "x": 1600,
+      "x": 1576,
       "y": 320,
       "text": "+525.0 kV  Positive Pole",
       "fontSize": 12,
@@ -292,8 +292,8 @@
     {
       "type": "text",
       "id": "TXT_DMR_LABEL",
-      "x": 1600,
-      "y": 681,
+      "x": 1540,
+      "y": 785,
       "text": "DMR  Neutral / Metallic Return",
       "fontSize": 12,
       "color": "#00B0FF"
@@ -301,7 +301,7 @@
     {
       "type": "text",
       "id": "TXT_DC_NEG_LABEL",
-      "x": 1600,
+      "x": 1576,
       "y": 1040,
       "text": "-525.0 kV  Negative Pole",
       "fontSize": 12,
@@ -311,7 +311,7 @@
       "type": "text",
       "id": "TXT_DC_DIR",
       "x": 1600,
-      "y": 510,
+      "y": 492,
       "text": "DIRECTION: ST1 --> ST2",
       "fontSize": 12,
       "color": "#90CAF9"
@@ -320,7 +320,7 @@
       "type": "text",
       "id": "TXT_DC_POWER",
       "x": 1600,
-      "y": 535,
+      "y": 522,
       "text": "P: 2000.0 MW",
       "fontSize": 12,
       "color": "#FFFFFF"
@@ -329,7 +329,7 @@
       "type": "text",
       "id": "TXT_DC_VDC",
       "x": 1600,
-      "y": 560,
+      "y": 552,
       "text": "Vdc: +/-525.0 kV",
       "fontSize": 12,
       "color": "#FFFFFF"
@@ -338,7 +338,7 @@
       "type": "text",
       "id": "TXT_DC_IDC",
       "x": 1600,
-      "y": 585,
+      "y": 582,
       "text": "Idc: 1905 A",
       "fontSize": 12,
       "color": "#FFFFFF"
@@ -347,9 +347,9 @@
       "type": "line",
       "id": "ARROW_DIR",
       "x1": 1700,
-      "y1": 620,
+      "y1": 630,
       "x2": 1740,
-      "y2": 620,
+      "y2": 630,
       "color": "#90CAF9",
       "lineWidth": 3
     },
@@ -598,7 +598,7 @@
       "id": "ST1_72CB_H",
       "x1": 150,
       "y1": 800,
-      "x2": 490,
+      "x2": 470,
       "y2": 800,
       "color": "#FFFFFF",
       "lineWidth": 3
@@ -606,9 +606,9 @@
     {
       "type": "line",
       "id": "ST1_72DS1_V1",
-      "x1": 490,
+      "x1": 470,
       "y1": 800,
-      "x2": 490,
+      "x2": 470,
       "y2": 840,
       "color": "#FFFFFF",
       "lineWidth": 3
@@ -617,7 +617,7 @@
       "type": "symbol",
       "id": "ST1_72DS1",
       "deviceType": "Disconnector",
-      "centerX": 490,
+      "centerX": 470,
       "centerY": 840,
       "librarySymbolName": "DS_Open",
       "variableName": "ST1.BAY2.DS1.Status",
@@ -626,9 +626,9 @@
     {
       "type": "line",
       "id": "ST1_72DS1_V2",
-      "x1": 490,
+      "x1": 470,
       "y1": 840,
-      "x2": 490,
+      "x2": 470,
       "y2": 920,
       "color": "#FFFFFF",
       "lineWidth": 3
@@ -637,7 +637,7 @@
       "type": "symbol",
       "id": "ST1_72CB",
       "deviceType": "CircuitBreaker",
-      "centerX": 490,
+      "centerX": 470,
       "centerY": 920,
       "librarySymbolName": "CB_Open",
       "variableName": "ST1.BAY2.CB1.Status",
@@ -646,9 +646,9 @@
     {
       "type": "line",
       "id": "ST1_72CB_V",
-      "x1": 490,
+      "x1": 470,
       "y1": 920,
-      "x2": 490,
+      "x2": 470,
       "y2": 960,
       "color": "#FFFFFF",
       "lineWidth": 3
@@ -656,7 +656,7 @@
     {
       "type": "line",
       "id": "ST1_72CB_RET_H",
-      "x1": 490,
+      "x1": 470,
       "y1": 960,
       "x2": 390,
       "y2": 960,
@@ -841,7 +841,7 @@
       "id": "ST1_P1_TO_P2_ES",
       "x1": 1340,
       "y1": 360,
-      "x2": 1420,
+      "x2": 1430,
       "y2": 360,
       "color": "#E53935",
       "lineWidth": 6
@@ -850,7 +850,7 @@
       "type": "symbol",
       "id": "ST1_P2_ES",
       "deviceType": "EarthSwitch",
-      "centerX": 1420,
+      "centerX": 1430,
       "centerY": 360,
       "librarySymbolName": "ES_Open",
       "variableName": "ST1.DC_YARD.P2_ES.Status",
@@ -859,9 +859,9 @@
     {
       "type": "line",
       "id": "ST1_P2_TO_PLD_DS",
-      "x1": 1420,
+      "x1": 1430,
       "y1": 360,
-      "x2": 1500,
+      "x2": 1520,
       "y2": 360,
       "color": "#E53935",
       "lineWidth": 6
@@ -870,7 +870,7 @@
       "type": "symbol",
       "id": "ST1_PLD_DS_POS",
       "deviceType": "Disconnector",
-      "centerX": 1500,
+      "centerX": 1520,
       "centerY": 360,
       "librarySymbolName": "DS_Open",
       "variableName": "ST1.DC_YARD.PLD_DS_POS.Status",
@@ -921,7 +921,7 @@
       "id": "ST1_N1_TO_N2_ES",
       "x1": 1340,
       "y1": 1080,
-      "x2": 1420,
+      "x2": 1430,
       "y2": 1080,
       "color": "#00E676",
       "lineWidth": 6
@@ -930,7 +930,7 @@
       "type": "symbol",
       "id": "ST1_N2_ES",
       "deviceType": "EarthSwitch",
-      "centerX": 1420,
+      "centerX": 1430,
       "centerY": 1080,
       "librarySymbolName": "ES_Open",
       "variableName": "ST1.DC_YARD.N2_ES.Status",
@@ -939,9 +939,9 @@
     {
       "type": "line",
       "id": "ST1_N2_TO_PLD_DS",
-      "x1": 1420,
+      "x1": 1430,
       "y1": 1080,
-      "x2": 1500,
+      "x2": 1520,
       "y2": 1080,
       "color": "#00E676",
       "lineWidth": 6
@@ -950,7 +950,7 @@
       "type": "symbol",
       "id": "ST1_PLD_DS_NEG",
       "deviceType": "Disconnector",
-      "centerX": 1500,
+      "centerX": 1520,
       "centerY": 1080,
       "librarySymbolName": "DS_Open",
       "variableName": "ST1.DC_YARD.PLD_DS_NEG.Status",
@@ -961,9 +961,9 @@
       "id": "DC_POS_POLE_LINE",
       "deviceType": "Busbar",
       "alcUseColor": "TRUE",
-      "x1": 1500,
+      "x1": 1520,
       "y1": 360,
-      "x2": 1940,
+      "x2": 1920,
       "y2": 360,
       "color": "#E53935",
       "lineWidth": 6
@@ -973,9 +973,9 @@
       "id": "DC_NEG_POLE_LINE",
       "deviceType": "Busbar",
       "alcUseColor": "TRUE",
-      "x1": 1500,
+      "x1": 1520,
       "y1": 1080,
-      "x2": 1940,
+      "x2": 1920,
       "y2": 1080,
       "color": "#00E676",
       "lineWidth": 6
@@ -1054,7 +1054,7 @@
       "type": "symbol",
       "id": "ST2_PLD_DS_POS",
       "deviceType": "Disconnector",
-      "centerX": 1940,
+      "centerX": 1920,
       "centerY": 360,
       "librarySymbolName": "DS_Open",
       "variableName": "ST2.DC_YARD.PLD_DS_POS.Status",
@@ -1063,9 +1063,9 @@
     {
       "type": "line",
       "id": "ST2_PLD_TO_P2_ES",
-      "x1": 1940,
+      "x1": 1920,
       "y1": 360,
-      "x2": 2020,
+      "x2": 2010,
       "y2": 360,
       "color": "#E53935",
       "lineWidth": 6
@@ -1074,7 +1074,7 @@
       "type": "symbol",
       "id": "ST2_P2_ES",
       "deviceType": "EarthSwitch",
-      "centerX": 2020,
+      "centerX": 2010,
       "centerY": 360,
       "librarySymbolName": "ES_Open",
       "variableName": "ST2.DC_YARD.P2_ES.Status",
@@ -1083,7 +1083,7 @@
     {
       "type": "line",
       "id": "ST2_P2_TO_P1_ES",
-      "x1": 2020,
+      "x1": 2010,
       "y1": 360,
       "x2": 2100,
       "y2": 360,
@@ -1134,7 +1134,7 @@
       "type": "symbol",
       "id": "ST2_PLD_DS_NEG",
       "deviceType": "Disconnector",
-      "centerX": 1940,
+      "centerX": 1920,
       "centerY": 1080,
       "librarySymbolName": "DS_Open",
       "variableName": "ST2.DC_YARD.PLD_DS_NEG.Status",
@@ -1143,9 +1143,9 @@
     {
       "type": "line",
       "id": "ST2_PLD_TO_N2_ES",
-      "x1": 1940,
+      "x1": 1920,
       "y1": 1080,
-      "x2": 2020,
+      "x2": 2010,
       "y2": 1080,
       "color": "#00E676",
       "lineWidth": 6
@@ -1154,7 +1154,7 @@
       "type": "symbol",
       "id": "ST2_N2_ES",
       "deviceType": "EarthSwitch",
-      "centerX": 2020,
+      "centerX": 2010,
       "centerY": 1080,
       "librarySymbolName": "ES_Open",
       "variableName": "ST2.DC_YARD.N2_ES.Status",
@@ -1163,7 +1163,7 @@
     {
       "type": "line",
       "id": "ST2_N2_TO_N1_ES",
-      "x1": 2020,
+      "x1": 2010,
       "y1": 1080,
       "x2": 2100,
       "y2": 1080,
